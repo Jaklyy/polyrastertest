@@ -247,14 +247,15 @@ bool handleFile(FILE** dat, u16* prevkeys, u8 mode)
     else
     {
         fatInitDefault();
-        *dat = fopen("rastertest.data","rb");
-        if (*dat != nullptr)
+        FILE* test = fopen("rastertest.data","rb");
+        if (test != nullptr)
         {
             printf("Datafile already present. Overwrite?\n\nA: Yes\nStart: No");
             u16 input = waitForInput(prevkeys);
             if (input & KEY_START)
                 return 0;
         }
+        fclose(test);
         *dat = fopen("rastertest.data", "wb");
         if (*dat == nullptr)
         {
