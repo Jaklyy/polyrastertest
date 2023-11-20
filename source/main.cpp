@@ -248,8 +248,14 @@ bool handleFile(FILE** dat, u16* prevkeys, u8 mode)
     {
         fatInitDefault();
         *dat = fopen("rastertest.data","rb");
-        if (*dat == nullptr)
-        *dat = fopen("rastertest.data", "wb"); // todo: dont just auto overwrite the existing file maybe?
+        if (*dat != nullptr)
+        {
+            printf("Datafile already present. Overwrite?\n\nA: Yes\nStart: No");
+            u16 input = waitForInput(prevkeys);
+            if (input & KEY_START)
+                return 0;
+        }
+        *dat = fopen("rastertest.data", "wb");
         if (*dat == nullptr)
         {
             printf("Could not make datafile.\n\nPress A or Start to close.");
