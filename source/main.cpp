@@ -5,7 +5,7 @@
 
 
 // Misc
-constexpr int NumEntries = 29;
+constexpr int NumEntries = 31;
 constexpr u8 NumVerts = 4;
 constexpr u8 NumAxis = 2;
 
@@ -149,8 +149,14 @@ constexpr Dataset Dataset[NumEntries] =
     {{{-25, 10}, {25, 10}, {35, -10}, {-45, -10}},
         Opaque | POLY_CULL_NONE,
         0},
-    //todo: add same x coord exemption to this category
-
+    // does not work when both the bottom points have the same x coord
+    {{{0, 10}, {0, 10}, {50, -10}, {-50, -10}},
+        Opaque | POLY_CULL_NONE,
+        0},
+    // even when their y coord is different
+    {{{0, 5}, {0, 10}, {50, -10}, {-50, -10}},
+        Opaque | POLY_CULL_NONE,
+        0},
 // Category: Fill Rule Adjacent ==============================
 
     // left side has precedence over right side
