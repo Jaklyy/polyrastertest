@@ -149,6 +149,7 @@ constexpr Dataset Dataset[NumEntries] =
     {{{-25, 10}, {25, 10}, {35, -10}, {-45, -10}},
         Opaque | POLY_CULL_NONE,
         0},
+    //todo: add same x coord exemption to this category
 
 // Category: Fill Rule Adjacent ==============================
 
@@ -292,6 +293,8 @@ void rewindData(FILE* dat, int iteration)
             }
             if ((filebuffer & (1 << (31 - shift))) == 0)
                 shift++;
+            else if (!(Dataset[i].PolyAttr & Opaque))
+                shift += 33;
             else
                 shift += 17;
         }
@@ -350,7 +353,7 @@ u8 getSpanPoint()
     return ret;
 }
 
-bool test(FILE* dat)
+bool test(FILE* dat, bool wireframe)
 {
     u8 tempbuffer;
     bool errorfound = false;
@@ -373,8 +376,23 @@ bool test(FILE* dat)
             shift++;
             u8 startspan = getSpanPoint();
             u8 endspan = getSpanPoint();
+            bool done = false;
             for (int x = 0; x < 256; x++)
             {
+                if (wireframe && x > endspan && !done)
+                {
+                    for (int i = 0; i < 2; i++)
+                    {
+                        fread(&tempbuffer, 1, 1, dat);
+                        filebuffer <<= 8;
+                        filebuffer |= tempbuffer;
+                        shift -= 8;
+                    }
+                    startspan = getSpanPoint();
+                    endspan = getSpanPoint();
+                    done = true;
+                }
+
                 u16 offset = y * 256 + x;
                 u16 currcolor = VRAM_A[offset] & 0x7FFF;
                 if (currcolor == ColorVoid)
@@ -420,10 +438,12 @@ bool test(FILE* dat)
 //=RECORDING==============================================================================
 //========================================================================================
 
-void record(FILE* dat)
+void record(FILE* dat, bool wireframe)
 {
     s16 start = -1;
     s16 end = -1;
+    s16 start2 = -1;
+    s16 end2 = -1;
 
     for (int y = 0;; y++)
     {
@@ -443,6 +463,31 @@ void record(FILE* dat)
 
                 shift -= 8;
                 filebuffer |= (end<<shift);
+
+                if (wireframe)
+                {
+                    for (int i = 0; i < 2; i++)
+                    {
+                        u8 tempbuffer = filebuffer >> 24;
+                        fwrite(&tempbuffer, 1, 1, dat);
+                        filebuffer <<= 8;
+                        shift += 8;
+                    }
+
+                    if (start2 == -1)
+                    {
+                        shift -= 16;
+                    }
+                    else
+                    {
+                        if (end2 == -1) end2 = 255;
+
+                        shift -=8;
+                        filebuffer |= (start2<<shift);
+                        shift -= 8;
+                        filebuffer |= (end2<<shift);
+                    }
+                }
             }
 
             while (shift <= 24)
@@ -459,21 +504,34 @@ void record(FILE* dat)
 
         start = -1;
         end = -1;
-        bool prevpixel = 0;
-        for (int x = 0; x < 256; x++)
+        start2 = -1;
+        end2 = -1;
+        int x = 0;
+        for (int i = 0; i <= wireframe; i++)
         {
-            if ((VRAM_A[y*256+x] & 0x7FFF) != ColorVoid)
+            bool prevpixel = 0;
+            for (; x < 256; x++)
             {
-                if (prevpixel == 0)
+                if ((VRAM_A[y*256+x] & 0x7FFF) != ColorVoid)
                 {
-                start = x;
-                prevpixel = 1;
+                    if (prevpixel == 0)
+                    {   
+                        if (!i)
+                            start = x;
+                        else
+                            start2 = x;
+                        prevpixel = 1;
+                    }
                 }
-            }
-            else if (prevpixel == 1)
-            {
-                end = x-1;
-                break;
+                else if (prevpixel == 1)
+                {
+                    if (!i)
+                        end = x-1;
+                    else
+                        end2 = x-1;
+                    x++;
+                    break;
+                }
             }
         }
     }     
@@ -593,13 +651,13 @@ int main()
                 {
                     printf("Testing %i...\n", iteration+1);
                 }
-                errorfound = test(dat);
+                errorfound = test(dat, !(Dataset[iteration].PolyAttr & Opaque));
             }
             else // recording new data file
             {
                 consoleClear();
                 printf("Recording %i...\n", iteration+1);
-                record(dat);
+                record(dat, !(Dataset[iteration].PolyAttr & Opaque));
             }
 
             if (mode >= 2)
