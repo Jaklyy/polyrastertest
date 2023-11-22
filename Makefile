@@ -14,7 +14,7 @@ include $(DEVKITARM)/ds_rules
 # SOURCES is a list of directories containing source code
 # INCLUDES is a list of directories containing extra header files
 #---------------------------------------------------------------------------------
-TARGET		:=	$(shell basename $(CURDIR))
+TARGET		:=	polyrastertest
 BUILD		:=	build
 SOURCES		:=	source
 DATA		:=	data  
@@ -64,9 +64,9 @@ export VPATH	:=	$(foreach dir,$(SOURCES),$(CURDIR)/$(dir)) \
 
 export DEPSDIR	:=	$(CURDIR)/$(BUILD)
 
-ifneq ($(strip $(NITRODATA)),)
-	export NITRO_FILES	:=	$(CURDIR)/$(NITRODATA)
-endif
+#ifneq ($(strip $(NITRODATA)),)
+#	export NITRO_FILES	:=	$(CURDIR)/$(NITRODATA)
+#endif
 
 CFILES		:=	$(foreach dir,$(SOURCES),$(notdir $(wildcard $(dir)/*.c)))
 CPPFILES	:=	$(foreach dir,$(SOURCES),$(notdir $(wildcard $(dir)/*.cpp)))
@@ -119,11 +119,11 @@ DEPENDS	:=	$(OFILES:.o=.d)
 # main targets
 #---------------------------------------------------------------------------------
 $(OUTPUT).nds	: 	$(OUTPUT).elf
-$(OUTPUT).nds	: 	$(shell find $(TOPDIR)/$(NITRODATA))
+#$(OUTPUT).nds	: 	$(shell find $(TOPDIR)/$(NITRODATA))
 $(OUTPUT).elf	:	$(OFILES)
  
 #---------------------------------------------------------------------------------
-%.bin.o	:	%.bin
+%.data.o	:	%.data
 #---------------------------------------------------------------------------------
 	@echo $(notdir $<)
 	@$(bin2o)

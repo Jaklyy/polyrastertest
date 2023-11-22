@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <fat.h>
 #include <filesystem.h>
-
+#include "rastertest_data.h"
 
 // Misc
 constexpr int NumEntries = 31;
@@ -183,7 +183,18 @@ constexpr u16 DataVersion = 0;
 // todo: support wireframe polygons
 
 u32 filebuffer;
-u8 shift = 0;
+u32 pointer;
+u8 shift;
+
+void readData(u32* buffer, const u8 bytes)
+{
+    for (int i = 0; i < bytes; i++)
+    {
+        *buffer <<= 8;
+        *buffer |= rastertest_data[pointer];
+        pointer++;
+    }
+}
 
 u16 waitForInput(u16* prevkeys)
 {
@@ -207,7 +218,21 @@ bool handleFile(FILE** dat, u16* prevkeys, u8 mode)
     // open file to read from
     if (mode != 1)
     {
-        fatInitDefault();
+        u32 version = 0;
+        pointer = 0;
+        readData(&version, 2);
+        if (version != DataVersion)
+        {
+            printf("Data has non-matching version number.\n\n Press A or Start to quit.\n");
+            waitForInput(prevkeys);
+            return 0;
+        }
+        
+        shift = 0;
+        filebuffer = 0;
+        readData(&filebuffer, 4);
+        // not compatible enough, code only kept for potential future use.
+        /*fatInitDefault();
         *dat = fopen("rastertest.data", "rb");
     
         if (*dat == nullptr)
@@ -248,7 +273,7 @@ bool handleFile(FILE** dat, u16* prevkeys, u8 mode)
         }
         
         fread(&filebuffer, 4, 1, *dat);
-        return 1;
+        return 1;*/
     }
     // create file to write to
     else
@@ -282,20 +307,26 @@ bool handleFile(FILE** dat, u16* prevkeys, u8 mode)
 
 void rewindData(FILE* dat, int iteration)
 {
-    u8 tempbuffer;
+    /*u8 tempbuffer;
     fseek(dat, 2, SEEK_SET); // seek to after version data
     fread(&filebuffer, 4, 1, dat); // reinit filebuffer
-    shift = 0; // reset shift
+    shift = 0; // reset shift*/
+    filebuffer = 0;
+    shift = 0;
+    pointer = 2;
+    readData(&filebuffer, 4);
     for (int i = 0; i < iteration; i++)
     {
         for (int j = 0; j < 192; j++)
         {
             while (shift >= 8)
             {
-                fread(&tempbuffer, 1, 1, dat);
+                /*fread(&tempbuffer, 1, 1, dat);
                 filebuffer <<= 8;
                 filebuffer |= tempbuffer;
-                shift -= 8;
+                shift -= 8;*/
+                readData(&filebuffer, 1);
+                shift -=8;
             }
             if ((filebuffer & (1 << (31 - shift))) == 0)
                 shift++;
@@ -361,7 +392,7 @@ u8 getSpanPoint()
 
 bool test(FILE* dat, bool wireframe)
 {
-    u8 tempbuffer;
+    //u8 tempbuffer;
     bool errorfound = false;
 
     for (int y = 0; y < 192; y++)
@@ -370,10 +401,12 @@ bool test(FILE* dat, bool wireframe)
         {
             while (shift >= 8)
             {
-                fread(&tempbuffer, 1, 1, dat);
+                readData(&filebuffer, 1);
+                shift -=8;
+                /*fread(&tempbuffer, 1, 1, dat);
                 filebuffer <<= 8;
                 filebuffer |= tempbuffer;
-                shift -= 8;
+                shift -= 8;*/
             }
         }
         if (filebuffer & (1 << (31-shift)))
@@ -389,10 +422,13 @@ bool test(FILE* dat, bool wireframe)
                 {
                     for (int i = 0; i < 2; i++)
                     {
-                        fread(&tempbuffer, 1, 1, dat);
+                        
+                        readData(&filebuffer, 1);
+                        shift -=8;
+                        /*fread(&tempbuffer, 1, 1, dat);
                         filebuffer <<= 8;
                         filebuffer |= tempbuffer;
-                        shift -= 8;
+                        shift -= 8;*/
                     }
                     startspan = getSpanPoint();
                     endspan = getSpanPoint();
