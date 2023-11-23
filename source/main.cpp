@@ -97,15 +97,15 @@ constexpr Dataset Dataset[NumEntries] =
         Opaque | POLY_CULL_NONE,
         0},
     // Right X-Major
-    {{{0, -32}, {0, 32}, {48, 32}, {-32, -16}},
+    {{{0, -32}, {0, 32}, {-48, 32}, {32, -16}},
         Opaque | POLY_CULL_NONE,
         0},
     // Right Y-Major
-    {{{0, -48}, {0, 32}, {16, 32}, {-16, -16}},
+    {{{0, -48}, {0, 32}, {-16, 32}, {16, -16}},
         Opaque | POLY_CULL_NONE,
         0},
     // Right Diagonal
-    {{{0, -16}, {0, 32}, {16, 32}, {-16, 0}},
+    {{{0, -16}, {0, 32}, {-16, 32}, {16, 0}},
         Opaque | POLY_CULL_NONE,
         0},
 
