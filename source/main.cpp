@@ -375,6 +375,8 @@ void readData(u32* buffer, const u8 bytes)
 {
     for (int i = 0; i < bytes; i++)
     {
+        if (pointer >= rastertest_data_size) return;
+
         *buffer <<= 8;
         *buffer |= rastertest_data[pointer];
         pointer++;
