@@ -5,12 +5,13 @@
 #include "rastertest_data.h"
 
 // Misc
-constexpr int NumEntries = 31;
+constexpr int NumEntries = 65;
 constexpr u8 NumVerts = 4;
 constexpr u8 NumAxis = 2;
 
 // Poly Attributes
 constexpr u32 Opaque = (31 << 16);
+constexpr u32 Trans = (30 << 16);
 constexpr u32 Wireframe = (0 << 16);
 
 // DISP3DCNT
@@ -25,112 +26,162 @@ struct Dataset
 
 constexpr Dataset Dataset[NumEntries] =
 {
-// Category: Fill Rules: Common ==============================
+// Category: Fill Rules: Primary =============================
 
-    // Left Pos. X-Major
+  // Sub Cat: Normal ----------------------------------------
+
+    // Left Pos. X-Major - no fill
     {{{-32, -32}, {32, -32}, {32, 16}, {-512, -512}},
         Opaque | POLY_CULL_NONE,
         0},
-    // Left Pos. Diagonal
+    // Left Pos. Diagonal - fill
     {{{-32, -32}, {32, -32}, {32, 32}, {-512, -512}},
         Opaque | POLY_CULL_NONE,
         0},
-    // Left Pos. Y-Major
+    // Left Pos. Y-Major - fill
     {{{-32, -32}, {32, -32}, {32, 48}, {-512, -512}},
         Opaque | POLY_CULL_NONE,
         0},
-    // Left Neg. X-Major
+    // Left Neg. X-Major - fill
     {{{-32, 32}, {32, 32}, {32, -16}, {-512, -512}},
         Opaque | POLY_CULL_NONE,
         0},
-    // Left Neg. Diagonal
+    // Left Neg. Diagonal - fill
     {{{-32, 32}, {32, 32}, {32, -32}, {-512, -512}},
         Opaque | POLY_CULL_NONE,
         0},
-    // Left Neg. Y-Major
+    // Left Neg. Y-Major - fill
     {{{-32, 32}, {32, 32}, {32, -48}, {-512, -512}},
         Opaque | POLY_CULL_NONE,
         0},
-    // Right Pos. X-Major
+    // Right Pos. X-Major - fill
     {{{32, -32}, {-32, -32}, {-32, 16}, {-512, -512}},
         Opaque | POLY_CULL_NONE,
         0},
-    // Right Pos. Diagonal
+    // Right Pos. Diagonal - no fill
     {{{32, -32}, {-32, -32}, {-32, 32}, {-512, -512}},
         Opaque | POLY_CULL_NONE,
         0},
-    // Right Pos. Y-Major
+    // Right Pos. Y-Major - no fill
     {{{32, -32}, {-32, -32}, {-32, 48}, {-512, -512}},
         Opaque | POLY_CULL_NONE,
         0},
-    // Right Neg. X-Major
+    // Right Neg. X-Major - no fill
     {{{32, 32}, {-32, 32}, {-32, -16}, {-512, -512}},
         Opaque | POLY_CULL_NONE,
         0},
-    // Right Neg. Diagonal
+    // Right Neg. Diagonal - no fill
     {{{32, 32}, {-32, 32}, {-32, -32}, {-512, -512}},
         Opaque | POLY_CULL_NONE,
         0},
-    // Right Neg. Y-Major
+    // 12. Right Neg. Y-Major - no fill
     {{{32, 32}, {-32, 32}, {-32, -48}, {-512, -512}},
         Opaque | POLY_CULL_NONE,
         0},
 
-// Category: Fill Rules: Global ==============================
+  // Sub Cat: Swapped ---------------------------------------
 
-    // Transparency + Blend
-    {{{-32, -32}, {32, -32}, {32, 16}, {-512, -512}},
-        (30 << 16) | POLY_CULL_NONE,
-        GL_BLEND},
-    // Transparency + NO BLEND
-    {{{-32, -32}, {32, -32}, {32, 16}, {-512, -512}},
-        (30 << 16) | POLY_CULL_NONE,
+    // Fill Rules for swapped polygons *generally* follow the same rules as unswapped polygons
+    // Key word being generally. You might notice that vertical right slopes aren't being filled. More on that later.
+
+    // Left X-Major
+    {{{0, -32}, {0, 32}, {48, 32}, {-32, -16}},
+        Opaque | POLY_CULL_NONE,
         0},
-    // Wireframe
+    // Left Y-Major
+    {{{0, -48}, {0, 32}, {16, 32}, {-16, -16}},
+        Opaque | POLY_CULL_NONE,
+        0},
+    // Left Diagonal
+    {{{0, -16}, {0, 32}, {16, 32}, {-16, 0}},
+        Opaque | POLY_CULL_NONE,
+        0},
+    // Right X-Major
+    {{{0, -32}, {0, 32}, {48, 32}, {-32, -16}},
+        Opaque | POLY_CULL_NONE,
+        0},
+    // Right Y-Major
+    {{{0, -48}, {0, 32}, {16, 32}, {-16, -16}},
+        Opaque | POLY_CULL_NONE,
+        0},
+    // Right Diagonal
+    {{{0, -16}, {0, 32}, {16, 32}, {-16, 0}},
+        Opaque | POLY_CULL_NONE,
+        0},
+
+  // Sub Cat: Override---------------------------------------
+    
+    // There are a few things that can force a polygon to fill all edges.
+
+    // Transparency + Blend - Fill
+    {{{-32, -32}, {32, -32}, {32, 16}, {-512, -512}},
+        Trans | POLY_CULL_NONE,
+        GL_BLEND},
+    // Transparency + NO BLEND - no fill
+    {{{-32, -32}, {32, -32}, {32, 16}, {-512, -512}},
+        Trans | POLY_CULL_NONE,
+        0},
+    // Wireframe - Fill
     {{{-32, -32}, {32, -32}, {32, 16}, {-512, -512}},
         Wireframe | POLY_CULL_NONE,
         0},
-    // Anti-Aliasing
+    // Anti-Aliasing - Fill
     {{{-32, -32}, {32, -32}, {32, 16}, {-512, -512}},
         Opaque | POLY_CULL_NONE,
-        (GL_ANTIALIAS)},
-    // Edge Marking
+        GL_ANTIALIAS},
+    // Edge Marking - Fill
     {{{-32, -32}, {32, -32}, {32, 16}, {-512, -512}},
         Opaque | POLY_CULL_NONE,
-        (GL_OUTLINE)},
+        GL_OUTLINE},
 
 // Category: Fill Rules: Unusual =============================
 
   // Sub Cat: Line Polygon Exception ------------------------
 
-    // simple line polygon
+    // Note: My current theory is that this is an explicit fill rule
+    // There may be alternative explanations, but this seems to check
+    // out with all the other weird behavior this gpu has thrown out.
+
+    // simple line polygon - fill
     {{{-10, -5}, {-10, -5}, {10, 5}, {-512, 0}},
         Opaque | POLY_CULL_NONE,
         0},
-    // not quite a line polygon
+    // not quite a line polygon - no fill
     {{{-11, -6}, {-10, -5}, {10, 5}, {-512, 0}},
         Opaque | POLY_CULL_NONE,
         0},
-    // if you can see this you're doing something wrong
+    // if you can see this you're doing something wrong - fill
     {{{-2, -1}, {0, 0}, {2, 1}, {-512, 0}},
         Opaque | POLY_CULL_NONE,
         0},
-    // cursed line polygon 1
+    // cursed line polygon 1 - fill, but like, only the line part
     {{{47, 8}, {-46, -27}, {47, 27}, {-46, -27}},
+        Opaque | POLY_CULL_NONE,
+        0},
+    // cursed line polygon 2 - see above
+    {{{47, 8}, {-46, -27}, {0, 0}, {-46, -27}},
+        Opaque | POLY_CULL_NONE,
+        0},
+    // cursed line polygon 3 - fill
+    {{{48, 0}, {0, -27}, {-40, -8}, {0, -27}},
         Opaque | POLY_CULL_NONE,
         0},
 
   // Sub Cat: Swapped Vertical Left Glitch ------------------
 
-    // checking the WRONG SIDE!!!
+    // instead of filling the right side when the right side is vertical
+    // ...when swapped they uh- check the left side--
+    // oops
+
+    // half filled. oh dear.
     {{{-110, -12}, {-110, 24}, {0, 24}, {-140, 0}},
         Opaque | POLY_CULL_NONE,
         0},
-    // cursed
+    // is the slope half filled or half unfilled?
     {{{50, -30}, {-30, 50}, {0, 50}, {0, -20}},
         Opaque | POLY_CULL_NONE,
         0},
-    // x major slopes are never filled by this glitch, though.
+    // x major slopes are never filled by this glitch, though. - no fill
     {{{50, -30}, {-20, 20}, {0, 20}, {0, -20}},
         Opaque | POLY_CULL_NONE,
         0},
@@ -157,9 +208,114 @@ constexpr Dataset Dataset[NumEntries] =
     {{{0, 5}, {0, 10}, {50, -10}, {-50, -10}},
         Opaque | POLY_CULL_NONE,
         0},
-// Category: Fill Rule Adjacent ==============================
 
+// Category: Vertical Right Edge Shift =======================
+
+    // vertical right edges are shifted left by one pixel
+
+    // just an innocent square c:
+    {{{-32, -32}, {-32, 32}, {32, 32}, {32, -32}},
+        Trans | POLY_CULL_NONE,
+        GL_BLEND},
+    // vertical 0 wide line polygon, right edges are *not* shifted left
+    {{{0, -32}, {0, 32}, {0, 32}, {0, -32}},
+        Trans | POLY_CULL_NONE,
+        GL_BLEND},
+    // vertical 1 wide line polygon, right edges are shifted left
+    {{{0, -32}, {0, 32}, {1, 32}, {1, -32}},
+        Trans | POLY_CULL_NONE,
+        GL_BLEND},
+    // but not when touching the edge of the screen
+    // todo: test if it is shifted left when drawn oob? cause im pretty sure it does matter
+    {{{-128, -32}, {-128, 32}, {-127, 32}, {-127, -32}},
+        Trans | POLY_CULL_NONE,
+        GL_BLEND},
+    // swapped polygon 1
+    {{{-32, -32}, {0, -32}, {0, 32}, {32, 32}},
+        Trans | POLY_CULL_NONE,
+        GL_BLEND},
+    // swapped polygon 1 reversed
+    {{{32, -32}, {0, -32}, {0, 32}, {-32, 32}},
+        Trans | POLY_CULL_NONE,
+        GL_BLEND},
+    // idk what this one even is
+    {{{-32, -32}, {-32, 32}, {32, 0}, {-32, 0}},
+        Trans | POLY_CULL_NONE,
+        GL_BLEND},
+    // still dont know
+    {{{32, -32}, {32, 32}, {-32, 0}, {32, 0}},
+        Trans | POLY_CULL_NONE,
+        GL_BLEND},
+
+// Category: Anti-Aliasing ===================================
+
+  // Sub Cat: Swapped Vertical Edge Glitch ------------------
+
+    // yeah they also messed this up, im guessing they invert the aa alpha for swapped polygons to make them work properly?
+    // ...even though vertical edges shouldn't be
+
+    // swapped polygons are very glitchy, it turns out
+    {{{-32, -32}, {0, -32}, {0, 32}, {32, 32}},
+        Opaque | POLY_CULL_NONE,
+        GL_ANTIALIAS},
+    // see above
+    {{{32, -32}, {0, -32}, {0, 32}, {-32, 32}},
+        Opaque | POLY_CULL_NONE,
+        GL_ANTIALIAS},
+    // edge case within an edge case combined with an edge case
+    {{{-110, -12}, {-110, 24}, {0, 24}, {-140, 0}},
+        Opaque | POLY_CULL_NONE,
+        GL_ANTIALIAS},
+
+// Category: Clipping ========================================
+
+  // Sub Cat: Horizontal Line Polygons and Clipping ---------
+
+    // todo: interpolation also behaves wonkily here, implement a way to test for/showcase this?
+    // ...maybe wait until interpolation under clipping is better understood, though
+    // todo2: also need to test if this applies with z clipping as well... in theory it should...?
+
+    // Horizontal line polygons always render 1-4,
+    {{{-32, 0}, {0, 0}, {48, 0}, {32, 0}},
+        Opaque | POLY_CULL_NONE,
+        0},
+    // 1-2,
+    {{{-32, 0}, {32, 0}, {48, 0}, {0, 0}},
+        Opaque | POLY_CULL_NONE,
+        0},
+    // or 2-4. 3 is never rendered
+    {{{0, 0}, {-32, 0}, {48, 0}, {32, 0}},
+        Opaque | POLY_CULL_NONE,
+        0},
+    // Until the first vertex gets clipped.... (1-2)
+    {{{-128, 0}, {-32, 0}, {32, 0}, {48, 0}},
+        Opaque | POLY_CULL_NONE,
+        0},
+    // Then things start to get interesting... (2-3)
+    {{{-128, 0}, {-128, 0}, {32, 0}, {48, 0}},
+        Opaque | POLY_CULL_NONE,
+        0},
+    // 2-3
+    {{{-128, 0}, {-128, 0}, {32, 0}, {48, 0}},
+        Opaque | POLY_CULL_NONE,
+        0},
+    // 3-4
+    {{{-128, 0}, {-128, 0}, {-128, 0}, {48, 0}},
+        Opaque | POLY_CULL_NONE,
+        0},
+    // 4th vertex being clipped might complicate things, might not, probably depends on implementation of clipping (1-2)
+    {{{-128, 0}, {-32, 0}, {32, 0}, {-128, 0}},
+        Opaque | POLY_CULL_NONE,
+        0},
+    //  2-3
+    {{{-128, 0}, {-128, 0}, {32, 0}, {-128, 0}},
+        Opaque | POLY_CULL_NONE,
+        0},
+        
+// Catgory: Misc =============================================
+ 
     // left side has precedence over right side
+    // I am a perfectly normal square. i do not trip up multiple emulators at all. c:
     {{{-32, -32}, {-32, 32}, {32, 33}, {32, -32}},
         Opaque | POLY_CULL_NONE,
         0},
@@ -167,15 +323,44 @@ constexpr Dataset Dataset[NumEntries] =
     {{{-30, -14}, {20, 15}, {52, 15}, {-51, 10}},
         Opaque | POLY_CULL_NONE,
         0},
+    //these slopes are identical, but render differently due to rounding.
+    {{{-64,0}, {64, -41}, {64, 41}, {-512, 0}},
+        Trans | POLY_CULL_NONE,
+        GL_BLEND},
+
+  // Sub Cat: Second Vertex is Weird ------------------------
+
+    // Second vertex behaves differently vs others for w/e reason.
+
+    // should behave normally
+    {{{-32, -32}, {0, 0}, {32, 32}, {32, -32}},
+        Wireframe | POLY_CULL_NONE,
+        0},
+    // should glitch out, behaving as if it was swapped
+    {{{-32, -32}, {1, -1}, {32, 32}, {32, -32}},
+        Wireframe | POLY_CULL_NONE,
+        0},
+    // however only the second vertex should cause this behavior
+    {{{1, -1}, {32, 32}, {32, -32}, {-32, -32}},
+        Wireframe | POLY_CULL_NONE,
+        0},
+    // should also behave normally
+    {{{-32, -32}, {-32, -32}, {32, 32}, {32, -32}},
+        Wireframe | POLY_CULL_NONE,
+        0},
+    // not sure if this one would behave weirdly tbh? idk im just gonna throw it in for the heck of it. might get removed.
+    {{{-2, -1}, {0, 0}, {-2, -1}, {2, 1}},
+        Wireframe | POLY_CULL_NONE,
+        0},
 };
 
 // Colors
 constexpr u16 ColorMissing  = 0b000000000011111; // red
-constexpr u16 ColorOverdraw = 0b111110000011111; // pink
+constexpr u16 ColorOverdraw = 0b111110000011111; // neon pink
 constexpr u16 ColorMatch    = 0b000001111100000; // green
-constexpr u16 ColorVoid     = 0b000000000000000;
+constexpr u16 ColorVoid     = 0b000000000000000; // black
 
-// only increment if the actual tests change
+// only increment if the actual tests change, (only do on releases?)
 constexpr u16 DataVersion = 0;
 
 // datafile format: 16 bits for version, each scanline has 1 bit for filled, 8 bits for start of span, 8 bits for end of span
@@ -223,7 +408,7 @@ bool handleFile(FILE** dat, u16* prevkeys, u8 mode)
         readData(&version, 2);
         if (version != DataVersion)
         {
-            printf("Data has non-matching version number.\n\n Press A or Start to quit.\n");
+            printf("Data has non-matching\n version number.\n\n Press A or Start to quit.\n");
             waitForInput(prevkeys);
             return 0;
         }
@@ -282,7 +467,7 @@ bool handleFile(FILE** dat, u16* prevkeys, u8 mode)
         FILE* test = fopen("rastertest.data","rb");
         if (test != nullptr)
         {
-            printf("Datafile already present. Overwrite?\n\nA: Yes\nStart: No");
+            printf("Datafile already present.\nOverwrite?\n\nA: Yes\nStart: No");
             u16 input = waitForInput(prevkeys);
             if (input & KEY_START)
                 return 0;
@@ -649,6 +834,7 @@ int main()
 
         u16 keys = keysHeld();
 
+        // check if done
         if (iteration >= NumEntries)
         {
             if (mode == 1)
@@ -673,6 +859,7 @@ int main()
             }
         }
 
+        // main chunk
         if (!errorfound)
         {
             swiWaitForVBlank(); // forces timings to align
@@ -739,9 +926,9 @@ int main()
                 rewindData(dat, iteration);
             }
         }
+
         if ((mode != 1) && ((keys & KEY_START) && !(prevkeys & KEY_START)))
         {
-            fclose(dat);
             return 0;
         }
         prevkeys = keys;
