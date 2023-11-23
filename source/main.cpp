@@ -874,12 +874,13 @@ int main()
                 if (mode != 0)
                 {
                     printf("Press A to view next test\nPress B to view previous test\nPress Start to close.\n\n");
-                    printf("Viewing Test %i...\n", iteration+1);
+                    printf("Viewing Test %i...\n\n", iteration+1);
                 }
                 else
                 {
-                    printf("Testing %i...\n", iteration+1);
+                    printf("Testing %i...\n\n", iteration+1);
                 }
+                printf("Green: Matching Pixel.\nRed: Missing Pixel.\nPink: Overdrawn Pixel.\n");
                 errorfound = test(dat, !(Dataset[iteration].PolyAttr & Opaque));
             }
             else // recording new data file
