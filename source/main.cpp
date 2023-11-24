@@ -97,15 +97,15 @@ constexpr Dataset Dataset[NumEntries] =
         Opaque | POLY_CULL_NONE,
         0},
     // Right X-Major
-    {{{0, -32}, {0, 32}, {-48, 32}, {32, -16}},
+    {{{0, -32}, {-1, 32}, {-48, 32}, {32, -16}},
         Opaque | POLY_CULL_NONE,
         0},
     // Right Y-Major
-    {{{0, -48}, {0, 32}, {-16, 32}, {16, -16}},
+    {{{0, -48}, {-1, 32}, {-16, 32}, {16, -16}},
         Opaque | POLY_CULL_NONE,
         0},
     // Right Diagonal
-    {{{0, -16}, {0, 32}, {-16, 32}, {16, 0}},
+    {{{0, -16}, {-1, 32}, {-16, 32}, {16, 0}},
         Opaque | POLY_CULL_NONE,
         0},
 
@@ -150,7 +150,7 @@ constexpr Dataset Dataset[NumEntries] =
     {{{-11, -6}, {-10, -5}, {10, 5}, {-512, 0}},
         Opaque | POLY_CULL_NONE,
         0},
-    // if you can see this you're doing something wrong - fill
+    // if you can see this you're doing something wrong - no fill
     {{{-2, -1}, {0, 0}, {2, 1}, {-512, 0}},
         Opaque | POLY_CULL_NONE,
         0},
@@ -200,7 +200,7 @@ constexpr Dataset Dataset[NumEntries] =
     {{{-25, 10}, {25, 10}, {35, -10}, {-45, -10}},
         Opaque | POLY_CULL_NONE,
         0},
-    // does not work when both the bottom points have the same x coord
+    // does not work when both the bottom of both slopes have the same x coord
     {{{0, 10}, {0, 10}, {50, -10}, {-50, -10}},
         Opaque | POLY_CULL_NONE,
         0},
@@ -333,19 +333,19 @@ constexpr Dataset Dataset[NumEntries] =
     // Second vertex behaves differently vs others for w/e reason.
 
     // should behave normally
-    {{{-32, -32}, {0, 0}, {32, 32}, {32, -32}},
+    {{{-32, -32}, {0, 0}, {32, 32}, {32, -31}},
         Wireframe | POLY_CULL_NONE,
         0},
     // should glitch out, behaving as if it was swapped
-    {{{-32, -32}, {1, -1}, {32, 32}, {32, -32}},
+    {{{-32, -32}, {1, -1}, {32, 32}, {32, -31}},
         Wireframe | POLY_CULL_NONE,
         0},
     // however only the second vertex should cause this behavior
-    {{{1, -1}, {32, 32}, {32, -32}, {-32, -32}},
+    {{{1, -1}, {32, 32}, {32, -32}, {-32, -31}},
         Wireframe | POLY_CULL_NONE,
         0},
     // should also behave normally
-    {{{-32, -32}, {-32, -32}, {32, 32}, {32, -32}},
+    {{{-32, -32}, {-32, -32}, {32, 32}, {32, -31}},
         Wireframe | POLY_CULL_NONE,
         0},
     // not sure if this one would behave weirdly tbh? idk im just gonna throw it in for the heck of it. might get removed.
@@ -353,6 +353,8 @@ constexpr Dataset Dataset[NumEntries] =
         Wireframe | POLY_CULL_NONE,
         0},
 };
+
+bool TestCompletionTracker[NumEntries];
 
 // Colors
 constexpr u16 ColorMissing  = 0b000000000011111; // red
@@ -814,7 +816,10 @@ int main()
     }
 
     FILE* dat;
-    handleFile(&dat, &prevkeys, mode);
+    if (!handleFile(&dat, &prevkeys, mode))
+    {
+        return 0;
+    }
 
     vramSetBankA(VRAM_A_LCD);
     REG_DISPCAPCNT = DCAP_MODE(DCAP_MODE_A)
@@ -823,17 +828,18 @@ int main()
                     | DCAP_OFFSET(0)
                     | DCAP_BANK(DCAP_BANK_VRAM_A);
 
-    bool errorfound = false;
-    int passcounter = NumEntries;
-    int highestiteration = 0;
+    bool showresults = 0;
+    int numcomplete = 0;
+    int numpass = 0;
+
 //========================================================================================
 //=MAIN LOOP==============================================================================
 //========================================================================================
 
     while (1)
     {
+        // poll input
 		scanKeys();
-
         u16 keys = keysHeld();
 
         // check if done
@@ -862,7 +868,7 @@ int main()
         }
 
         // main chunk
-        if (!errorfound)
+        if (!showresults)
         {
             swiWaitForVBlank(); // forces timings to align
             drawPoly(iteration);
@@ -870,9 +876,25 @@ int main()
 
             if (mode != 1) // not recording new data file
             {
+                showresults = (mode >= 2);
+                bool errorfound;
+
+                showresults |= errorfound = test(dat, !(Dataset[iteration].PolyAttr & Opaque));
+
+                if (!TestCompletionTracker[iteration])
+                {
+                    TestCompletionTracker[iteration] = true;
+                    numcomplete++;
+                    if (!errorfound) numpass++;
+                }
+
+                if (showresults) videoSetMode(MODE_FB0);
+                else iteration++;
+
                 consoleClear();
                 if (mode == 3)
-                    printf("Testing complete!\n\nTests Passed: %i/%i\n\n", passcounter, NumEntries);
+                    printf("Testing complete!\n\n");
+                printf("Tests Passed: %i/%i\n\n", numpass, numcomplete);
                 if (mode != 0)
                 {
                     printf("Press A to view next test\nPress B to view previous test\nPress Start to close.\n\n");
@@ -883,45 +905,28 @@ int main()
                     printf("Testing %i...\n\n", iteration+1);
                 }
                 printf("Green: Matching Pixel.\nRed: Missing Pixel.\nPink: Overdrawn Pixel.\n");
-                errorfound = test(dat, !(Dataset[iteration].PolyAttr & Opaque));
             }
             else // recording new data file
             {
                 consoleClear();
                 printf("Recording %i...\n", iteration+1);
-                record(dat, !(Dataset[iteration].PolyAttr & Opaque));
-            }
 
-            if (mode >= 2)
-                errorfound = true;
-            
-            if (errorfound)
-            {
-                videoSetMode(MODE_FB0);
-                if (iteration >= highestiteration)
-                    passcounter--;
-            }
-            else
-            {
+                record(dat, !(Dataset[iteration].PolyAttr & Opaque));
                 iteration++;
-                highestiteration++;
-                if (highestiteration == NumEntries) highestiteration++;
             }
         }
-        else
+        else // if showing results
         {
             if (keys & KEY_A && !(prevkeys & KEY_A))
             {
-                errorfound = false;
+                showresults = false;
                 videoSetMode(MODE_0_3D);
                 iteration++;
-                if (iteration > highestiteration) highestiteration++;
-                if (highestiteration == NumEntries) highestiteration++;
             }
 
             if ((mode >= 2) && ((keys & KEY_B) && !(prevkeys & KEY_B)))
             {
-                errorfound = false;
+                showresults = false;
                 videoSetMode(MODE_0_3D);
                 iteration--;
                 if (iteration < 0)
@@ -930,12 +935,13 @@ int main()
             }
         }
 
+        // if not recording allow you to cancel at any time.
         if ((mode != 1) && ((keys & KEY_START) && !(prevkeys & KEY_START)))
         {
             return 0;
         }
         prevkeys = keys;
-        if (errorfound) swiWaitForVBlank();
+        if (showresults) swiWaitForVBlank();
     }
 
     if(dat != nullptr) fclose(dat);
