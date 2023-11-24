@@ -213,7 +213,7 @@ constexpr Dataset Dataset[NumEntries] =
 
     // vertical right edges are shifted left by one pixel
 
-    // just an innocent square c:
+    // square
     {{{-32, -32}, {-32, 32}, {32, 32}, {32, -32}},
         Trans | POLY_CULL_NONE,
         GL_BLEND},
@@ -315,7 +315,7 @@ constexpr Dataset Dataset[NumEntries] =
 // Catgory: Misc =============================================
  
     // left side has precedence over right side
-    // I am a perfectly normal square. i do not trip up multiple emulators at all. c:
+    // Just an innocent square c:
     {{{-32, -32}, {-32, 32}, {32, 33}, {32, -32}},
         Opaque | POLY_CULL_NONE,
         0},

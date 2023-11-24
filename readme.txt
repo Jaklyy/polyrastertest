@@ -1,5 +1,5 @@
-==================================================
-Welcome to the Jakly Polygon Rasterization Suite.
+====================================================
+Welcome to the Jakly Polygon Rasterization Suite 1.0
 Or uh, polyrastertest as I like to call it.
 ...Just call it polyrastertest.
 
@@ -23,7 +23,7 @@ Feel free to run the test on various pieces of actual hardware to find out!
 
 Known Bugs:
 1. For some reason closing the test also closes TWiLight Menu++ instead of reloading the menu, at least on new3dsxl. Not sure why.
-
+2. Sometimes dots appear when tabbing through the tests on hardware. Not sure why, but probably worth emulating.    Maybe.
 
 Credits and Thanks:
 StrikerX3 - Their line test rom provided a good reference for many of the things I struggled with implementing in this.
