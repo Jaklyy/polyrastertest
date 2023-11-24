@@ -5,7 +5,7 @@
 #include "rastertest_data.h"
 
 // Misc
-constexpr int NumEntries = 65;
+constexpr int NumEntries = 66;
 constexpr u8 NumVerts = 4;
 constexpr u8 NumAxis = 2;
 
@@ -333,6 +333,10 @@ constexpr Dataset Dataset[NumEntries] =
     // Second vertex behaves differently vs others for w/e reason.
 
     // should behave normally
+    {{{-32, -32}, {-1, -1}, {32, 32}, {32, -31}},
+        Wireframe | POLY_CULL_NONE,
+        0},
+    // should behave normally ...or not?
     {{{-32, -32}, {0, 0}, {32, 32}, {32, -31}},
         Wireframe | POLY_CULL_NONE,
         0},
@@ -363,7 +367,7 @@ constexpr u16 ColorMatch    = 0b000001111100000; // green
 constexpr u16 ColorVoid     = 0b000000000000000; // black
 
 // only increment if the actual tests change, (only do on releases?)
-constexpr u16 DataVersion = 0;
+constexpr u16 DataVersion = 1;
 
 // datafile format: 16 bits for version, each scanline has 1 bit for filled, 8 bits for start of span, 8 bits for end of span
 // the 16 bits for span start/end are left out if not filled
@@ -412,7 +416,7 @@ bool handleFile(FILE** dat, u16* prevkeys, u8 mode)
         readData(&version, 2);
         if (version != DataVersion)
         {
-            printf("Data has non-matching\n version number.\n\n Press A or Start to quit.\n");
+            printf("Data has non-matching version\nnumber.\n\nPress A or Start to quit.\n");
             waitForInput(prevkeys);
             return 0;
         }
@@ -484,7 +488,11 @@ bool handleFile(FILE** dat, u16* prevkeys, u8 mode)
             waitForInput(prevkeys);
             return 0;
         }
-        fwrite(&DataVersion, 2, 1, *dat);
+        u8 buffer = DataVersion >> 8;
+        fwrite(&buffer, 1, 1, *dat);
+        buffer = DataVersion & 0xFF;
+        fwrite(&buffer, 1, 1, *dat);
+        
         shift = 32;
     }
     return 1;
@@ -854,7 +862,7 @@ int main()
                     fwrite(&tempbuffer, 1, 1, dat);
                 }
                 consoleClear();
-                printf("Recording Done.\n\nNew datafile present in rom\n directory.\n\nPress A or Start to quit.\n");
+                printf("Recording Done.\n\nNew datafile present in rom\ndirectory.\n\nPress A or Start to quit.\n");
                 fclose(dat);
                 waitForInput(&prevkeys);
                 return 0;
