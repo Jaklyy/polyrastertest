@@ -2,9 +2,9 @@
 
 
 // Misc
-constexpr int NumEntries = 66;
 constexpr u8 NumVerts = 4;
 constexpr u8 NumAxis = 3;
+constexpr char Version[] = "1.0.1";
 
 // Poly Attributes
 constexpr u32 Opaque = (31 << 16);
@@ -31,7 +31,7 @@ struct Dataset
     u8 Colors; // How many colors to read/record from/to the data file: 0-3 = none, r, rg, rgb
 };
 
-constexpr Dataset Dataset[NumEntries] =
+constexpr Dataset Dataset[] =
 {
 // Category: Fill Rules: Primary =============================
 
@@ -430,3 +430,5 @@ constexpr Dataset Dataset[NumEntries] =
         0,
         0},
 };
+
+constexpr int NumEntries = sizeof(Dataset) / sizeof(Dataset[0]);
