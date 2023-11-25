@@ -13,13 +13,10 @@
 // the 16 bits for span start/end are left out if not filled
 // wireframe polygons have 32 bits, adding room for storing data for the potential second span.
 
-
 // global variables because im lazy
-
 u32 filebuffer;
 u32 pointer;
 u8 shift;
-
 
 //========================================================================================
 //=MISC===================================================================================
