@@ -14,15 +14,15 @@ constexpr u32 Opaque = (31 << 16);
 constexpr u32 Trans = (30 << 16);
 constexpr u32 Wireframe = (0 << 16);
 
-// DISP3DCNT
+// Disp3DCnt
 //ph
 
 struct Dataset
 {
     s16 Vertices[NumVerts][NumAxis]; // Coordinates of each vertex x,y,z
     u32 PolyAttr; // Polygons attributes for each test
-    u32 DISP3DCNT; // 3d display control register bits to enable for each test
-    u8 Colors; // how many colors to read/record from the data file; 0-3 = none > r -> rg -> rgb
+    u32 Disp3DCnt; // 3D Display Control Register bits to enable for each test
+    u8 Colors; // How many colors to read/record from/to the data file: 0-3 = none, r, rg, rgb
 };
 
 constexpr Dataset Dataset[NumEntries] =
@@ -34,50 +34,62 @@ constexpr Dataset Dataset[NumEntries] =
     // Left Pos. X-Major - no fill
     {{{-32, -32, 0}, {32, -32, 0}, {32, 16, 0}, {-512, -512, 0}},
         Opaque | POLY_CULL_NONE,
+        0,
         0},
     // Left Pos. Diagonal - fill
     {{{-32, -32, 0}, {32, -32, 0}, {32, 32, 0}, {-512, -512, 0}},
         Opaque | POLY_CULL_NONE,
+        0,
         0},
     // Left Pos. Y-Major - fill
     {{{-32, -32, 0}, {32, -32, 0}, {32, 48, 0}, {-512, -512, 0}},
         Opaque | POLY_CULL_NONE,
+        0,
         0},
     // Left Neg. X-Major - fill
     {{{-32, 32, 0}, {32, 32, 0}, {32, -16, 0}, {-512, -512, 0}},
         Opaque | POLY_CULL_NONE,
+        0,
         0},
     // Left Neg. Diagonal - fill
     {{{-32, 32, 0}, {32, 32, 0}, {32, -32, 0}, {-512, -512, 0}},
         Opaque | POLY_CULL_NONE,
+        0,
         0},
     // Left Neg. Y-Major - fill
     {{{-32, 32, 0}, {32, 32, 0}, {32, -48, 0}, {-512, -512, 0}},
         Opaque | POLY_CULL_NONE,
+        0,
         0},
     // Right Pos. X-Major - fill
     {{{32, -32, 0}, {-32, -32, 0}, {-32, 16, 0}, {-512, -512, 0}},
         Opaque | POLY_CULL_NONE,
+        0,
         0},
     // Right Pos. Diagonal - no fill
     {{{32, -32, 0}, {-32, -32, 0}, {-32, 32, 0}, {-512, -512, 0}},
         Opaque | POLY_CULL_NONE,
+        0,
         0},
     // Right Pos. Y-Major - no fill
     {{{32, -32, 0}, {-32, -32, 0}, {-32, 48, 0}, {-512, -512, 0}},
         Opaque | POLY_CULL_NONE,
+        0,
         0},
     // Right Neg. X-Major - no fill
     {{{32, 32, 0}, {-32, 32, 0}, {-32, -16, 0}, {-512, -512, 0}},
         Opaque | POLY_CULL_NONE,
+        0,
         0},
     // Right Neg. Diagonal - no fill
     {{{32, 32, 0}, {-32, 32, 0}, {-32, -32, 0}, {-512, -512, 0}},
         Opaque | POLY_CULL_NONE,
+        0,
         0},
     // 12. Right Neg. Y-Major - no fill
     {{{32, 32, 0}, {-32, 32, 0}, {-32, -48, 0}, {-512, -512, 0}},
         Opaque | POLY_CULL_NONE,
+        0,
         0},
 
   // Sub Cat: Swapped ---------------------------------------
@@ -88,26 +100,32 @@ constexpr Dataset Dataset[NumEntries] =
     // Left X-Major
     {{{0, -32, 0}, {0, 32, 0}, {48, 32, 0}, {-32, -16, 0}},
         Opaque | POLY_CULL_NONE,
+        0,
         0},
     // Left Y-Major
     {{{0, -48, 0}, {0, 32, 0}, {16, 32, 0}, {-16, -16, 0}},
         Opaque | POLY_CULL_NONE,
+        0,
         0},
     // Left Diagonal
     {{{0, -16, 0}, {0, 32, 0}, {16, 32, 0}, {-16, 0, 0}},
         Opaque | POLY_CULL_NONE,
+        0,
         0},
     // Right X-Major
     {{{0, -32, 0}, {-1, 32, 0}, {-48, 32, 0}, {32, -16, 0}},
         Opaque | POLY_CULL_NONE,
+        0,
         0},
     // Right Y-Major
     {{{0, -48, 0}, {-1, 32, 0}, {-16, 32, 0}, {16, -16, 0}},
         Opaque | POLY_CULL_NONE,
+        0,
         0},
     // Right Diagonal
     {{{0, -16, 0}, {-1, 32, 0}, {-16, 32, 0}, {16, 0, 0}},
         Opaque | POLY_CULL_NONE,
+        0,
         0},
 
   // Sub Cat: Override---------------------------------------
@@ -117,23 +135,28 @@ constexpr Dataset Dataset[NumEntries] =
     // Transparency + Blend - Fill
     {{{-32, -32, 0}, {32, -32, 0}, {32, 16, 0}, {-512, -512, 0}},
         Trans | POLY_CULL_NONE,
-        GL_BLEND},
+        GL_BLEND,
+        0},
     // Transparency + NO BLEND - no fill
     {{{-32, -32, 0}, {32, -32, 0}, {32, 16, 0}, {-512, -512, 0}},
         Trans | POLY_CULL_NONE,
+        0,
         0},
     // Wireframe - Fill
     {{{-32, -32, 0}, {32, -32, 0}, {32, 16, 0}, {-512, -512, 0}},
         Wireframe | POLY_CULL_NONE,
+        0,
         0},
     // Anti-Aliasing - Fill
     {{{-32, -32, 0}, {32, -32, 0}, {32, 16, 0}, {-512, -512, 0}},
         Opaque | POLY_CULL_NONE,
-        GL_ANTIALIAS},
+        GL_ANTIALIAS,
+        0},
     // Edge Marking - Fill
     {{{-32, -32, 0}, {32, -32, 0}, {32, 16, 0}, {-512, -512, 0}},
         Opaque | POLY_CULL_NONE,
-        GL_OUTLINE},
+        GL_OUTLINE,
+        0},
 
 // Category: Fill Rules: Unusual =============================
 
@@ -146,26 +169,32 @@ constexpr Dataset Dataset[NumEntries] =
     // simple line polygon - fill
     {{{-10, -5, 0}, {-10, -5, 0}, {10, 5, 0}, {-512, 0, 0}},
         Opaque | POLY_CULL_NONE,
+        0,
         0},
     // not quite a line polygon - no fill
     {{{-11, -6, 0}, {-10, -5, 0}, {10, 5, 0}, {-512, 0, 0}},
         Opaque | POLY_CULL_NONE,
+        0,
         0},
     // if you can see this you're doing something wrong - no fill
     {{{-2, -1, 0}, {0, 0, 0}, {2, 1, 0}, {-512, 0, 0}},
         Opaque | POLY_CULL_NONE,
+        0,
         0},
     // cursed line polygon 1 - fill, but like, only the line part
     {{{47, 8, 0}, {-46, -27, 0}, {47, 27, 0}, {-46, -27, 0}},
         Opaque | POLY_CULL_NONE,
+        0,
         0},
     // cursed line polygon 2 - see above
     {{{47, 8, 0}, {-46, -27, 0}, {0, 0, 0}, {-46, -27, 0}},
         Opaque | POLY_CULL_NONE,
+        0,
         0},
     // cursed line polygon 3 - fill
     {{{48, 0, 0}, {0, -27, 0}, {-40, -8, 0}, {0, -27, 0}},
         Opaque | POLY_CULL_NONE,
+        0,
         0},
 
   // Sub Cat: Swapped Vertical Left Glitch ------------------
@@ -177,14 +206,17 @@ constexpr Dataset Dataset[NumEntries] =
     // half filled. oh dear.
     {{{-110, -12, 0}, {-110, 24, 0}, {0, 24, 0}, {-140, 0, 0}},
         Opaque | POLY_CULL_NONE,
+        0,
         0},
     // is the slope half filled or half unfilled?
     {{{50, -30, 0}, {-30, 50, 0}, {0, 50, 0}, {0, -20, 0}},
         Opaque | POLY_CULL_NONE,
+        0,
         0},
     // x major slopes are never filled by this glitch, though. - no fill
     {{{50, -30, 0}, {-20, 20, 0}, {0, 20, 0}, {0, -20, 0}},
         Opaque | POLY_CULL_NONE,
+        0,
         0},
 
   // Sub Cat: Trapezoids ------------------------------------
@@ -192,22 +224,27 @@ constexpr Dataset Dataset[NumEntries] =
     // this is a fill rule ...for some reason?
     {{{-25, 10, 0}, {25, 10, 0}, {50, -10, 0}, {-50, -10, 0}},
         Opaque | POLY_CULL_NONE,
+        0,
         0},
     // it applies to clipped vertices too!
     {{{-50, 90, 0}, {50, 90, 0}, {0, 110, 0}, {-512, 0, 0}},
         Opaque | POLY_CULL_NONE,
+        0,
         0},
     // only x major slopes though
     {{{-25, 10, 0}, {25, 10, 0}, {35, -10, 0}, {-45, -10, 0}},
         Opaque | POLY_CULL_NONE,
+        0,
         0},
     // does not work when both the bottom of both slopes have the same x coord
     {{{0, 10, 0}, {0, 10, 0}, {50, -10, 0}, {-50, -10, 0}},
         Opaque | POLY_CULL_NONE,
+        0,
         0},
     // even when their y coord is different
     {{{0, 5, 0}, {0, 10, 0}, {50, -10, 0}, {-50, -10, 0}},
         Opaque | POLY_CULL_NONE,
+        0,
         0},
 
 // Category: Vertical Right Edge Shift =======================
@@ -217,36 +254,44 @@ constexpr Dataset Dataset[NumEntries] =
     // square
     {{{-32, -32, 0}, {-32, 32, 0}, {32, 32, 0}, {32, -32, 0}},
         Trans | POLY_CULL_NONE,
-        GL_BLEND},
+        GL_BLEND,
+        0},
     // vertical 0 wide line polygon, right edges are *not* shifted left
     {{{0, -32, 0}, {0, 32, 0}, {0, 32, 0}, {0, -32, 0}},
         Trans | POLY_CULL_NONE,
-        GL_BLEND},
+        GL_BLEND,
+        0},
     // vertical 1 wide line polygon, right edges are shifted left
     {{{0, -32, 0}, {0, 32, 0}, {1, 32, 0}, {1, -32, 0}},
         Trans | POLY_CULL_NONE,
-        GL_BLEND},
+        GL_BLEND,
+        0},
     // but not when touching the edge of the screen
     // todo: test if it is shifted left when drawn oob? cause im pretty sure it does matter
     {{{-128, -32, 0}, {-128, 32, 0}, {-127, 32, 0}, {-127, -32, 0}},
         Trans | POLY_CULL_NONE,
-        GL_BLEND},
+        GL_BLEND,
+        0},
     // swapped polygon 1
     {{{-32, -32, 0}, {0, -32, 0}, {0, 32, 0}, {32, 32, 0}},
         Trans | POLY_CULL_NONE,
-        GL_BLEND},
+        GL_BLEND,
+        0},
     // swapped polygon 1 reversed
     {{{32, -32, 0}, {0, -32, 0}, {0, 32, 0}, {-32, 32, 0}},
         Trans | POLY_CULL_NONE,
-        GL_BLEND},
+        GL_BLEND,
+        0},
     // idk what this one even is
     {{{-32, -32, 0}, {-32, 32, 0}, {32, 0, 0}, {-32, 0, 0}},
         Trans | POLY_CULL_NONE,
-        GL_BLEND},
+        GL_BLEND,
+        0},
     // still dont know
     {{{32, -32, 0}, {32, 32, 0}, {-32, 0, 0}, {32, 0, 0}},
         Trans | POLY_CULL_NONE,
-        GL_BLEND},
+        GL_BLEND,
+        0},
 
 // Category: Anti-Aliasing ===================================
 
@@ -258,15 +303,18 @@ constexpr Dataset Dataset[NumEntries] =
     // swapped polygons are very glitchy, it turns out
     {{{-32, -32, 0}, {0, -32, 0}, {0, 32, 0}, {32, 32, 0}},
         Opaque | POLY_CULL_NONE,
-        GL_ANTIALIAS},
+        GL_ANTIALIAS,
+        0},
     // see above
     {{{32, -32, 0}, {0, -32, 0}, {0, 32, 0}, {-32, 32, 0}},
         Opaque | POLY_CULL_NONE,
-        GL_ANTIALIAS},
+        GL_ANTIALIAS,
+        0},
     // edge case within an edge case combined with an edge case
     {{{-110, -12, 0}, {-110, 24, 0}, {0, 24, 0}, {-140, 0, 0}},
         Opaque | POLY_CULL_NONE,
-        GL_ANTIALIAS},
+        GL_ANTIALIAS,
+        0},
 
 // Category: Clipping ========================================
 
@@ -279,38 +327,47 @@ constexpr Dataset Dataset[NumEntries] =
     // Horizontal line polygons always render 1-4,
     {{{-32, 0, 0}, {0, 0, 0}, {48, 0, 0}, {32, 0, 0}},
         Opaque | POLY_CULL_NONE,
+        0,
         0},
     // 1-2,
     {{{-32, 0, 0}, {32, 0, 0}, {48, 0, 0}, {0, 0, 0}},
         Opaque | POLY_CULL_NONE,
+        0,
         0},
     // or 2-4. 3 is never rendered
     {{{0, 0, 0}, {-32, 0, 0}, {48, 0, 0}, {32, 0, 0}},
         Opaque | POLY_CULL_NONE,
+        0,
         0},
     // Until the first vertex gets clipped.... (1-2)
     {{{-128, 0, 0}, {-32, 0, 0}, {32, 0, 0}, {48, 0, 0}},
         Opaque | POLY_CULL_NONE,
+        0,
         0},
     // Then things start to get interesting... (2-3)
     {{{-128, 0, 0}, {-128, 0, 0}, {32, 0, 0}, {48, 0, 0}},
         Opaque | POLY_CULL_NONE,
+        0,
         0},
     // 2-3
     {{{-128, 0, 0}, {-128, 0, 0}, {32, 0, 0}, {48, 0, 0}},
         Opaque | POLY_CULL_NONE,
+        0,
         0},
     // 3-4
     {{{-128, 0, 0}, {-128, 0, 0}, {-128, 0, 0}, {48, 0, 0}},
         Opaque | POLY_CULL_NONE,
+        0,
         0},
     // 4th vertex being clipped might complicate things, might not, probably depends on implementation of clipping (1-2)
     {{{-128, 0, 0}, {-32, 0, 0}, {32, 0, 0}, {-128, 0, 0}},
         Opaque | POLY_CULL_NONE,
+        0,
         0},
     //  2-3
     {{{-128, 0, 0}, {-128, 0, 0}, {32, 0, 0}, {-128, 0, 0}},
         Opaque | POLY_CULL_NONE,
+        0,
         0},
         
 // Catgory: Misc =============================================
@@ -319,15 +376,18 @@ constexpr Dataset Dataset[NumEntries] =
     // Just an innocent square c:
     {{{-32, -32, 0}, {-32, 32, 0}, {32, 33, 0}, {32, -32, 0}},
         Opaque | POLY_CULL_NONE,
+        0,
         0},
     // pointer never goes backwards
     {{{-30, -14, 0}, {20, 15, 0}, {52, 15, 0}, {-51, 10, 0}},
         Opaque | POLY_CULL_NONE,
+        0,
         0},
     //these slopes are identical, but render differently due to rounding.
     {{{-64,0, 0}, {64, -41, 0}, {64, 41, 0}, {-512, 0, 0}},
         Trans | POLY_CULL_NONE,
-        GL_BLEND},
+        GL_BLEND,
+        0},
 
   // Sub Cat: Second Vertex is Weird ------------------------
 
@@ -336,26 +396,32 @@ constexpr Dataset Dataset[NumEntries] =
     // should behave normally
     {{{-32, -32, 0}, {-1, -1, 0}, {32, 32, 0}, {32, -31, 0}},
         Wireframe | POLY_CULL_NONE,
+        0,
         0},
     // should behave normally ...or not?
     {{{-32, -32, 0}, {0, 0, 0}, {32, 32, 0}, {32, -31, 0}},
         Wireframe | POLY_CULL_NONE,
+        0,
         0},
     // should glitch out, behaving as if it was swapped
     {{{-32, -32, 0}, {1, -1, 0}, {32, 32, 0}, {32, -31, 0}},
         Wireframe | POLY_CULL_NONE,
+        0,
         0},
     // however only the second vertex should cause this behavior
     {{{1, -1, 0}, {32, 32, 0}, {32, -32, 0}, {-32, -31, 0}},
         Wireframe | POLY_CULL_NONE,
+        0,
         0},
     // should also behave normally
     {{{-32, -32, 0}, {-32, -32, 0}, {32, 32, 0}, {32, -31, 0}},
         Wireframe | POLY_CULL_NONE,
+        0,
         0},
     // not sure if this one would behave weirdly tbh? idk im just gonna throw it in for the heck of it. might get removed.
     {{{-2, -1, 0}, {0, 0, 0}, {-2, -1, 0}, {2, 1, 0}},
         Wireframe | POLY_CULL_NONE,
+        0,
         0},
 };
 
@@ -372,7 +438,7 @@ constexpr u16 DataVersion = 1;
 
 // datafile format: 16 bits for version, each scanline has 1 bit for filled, 8 bits for start of span, 8 bits for end of span
 // the 16 bits for span start/end are left out if not filled
-// todo: support wireframe polygons
+// wireframe polygons have 32 bits, adding room for storing data for the potential second span.
 
 u32 filebuffer;
 u32 pointer;
@@ -425,49 +491,6 @@ bool handleFile(FILE** dat, u16* prevkeys, u8 mode)
         shift = 0;
         filebuffer = 0;
         readData(&filebuffer, 4);
-        // not compatible enough, code only kept for potential future use.
-        /*fatInitDefault();
-        *dat = fopen("rastertest.data", "rb");
-    
-        if (*dat == nullptr)
-        {
-            nitroFSInit(NULL);
-            *dat = fopen("rastertest.data", "rb");
-            if (*dat == nullptr)
-            {
-                printf("Unable to read builtin data. Welp.\n\n Press A or Start to exit");
-                waitForInput(prevkeys);
-                return 0;
-            }
-        }
-        fseek(*dat, 0, SEEK_SET);
-
-        u16 version;
-        fread(&version, 2, 1, *dat);
-        if (version != DataVersion)
-        {
-            printf("Datafile is of version %i, expected version is version %i\nPlease provide an appropriate date file\nIf you would like to proceed with builtin data please press A\nTo quit, press Start.\n", version, DataVersion);
-        
-            u16 input = waitForInput(prevkeys);
-            if (input & KEY_START)
-                return 0;
-            else if (input & KEY_A)
-            {
-                consoleClear();
-                fclose(*dat);
-                nitroFSInit(NULL);
-                *dat = fopen("rastertest.data", "rb");
-                if (*dat == nullptr)
-                {
-                    printf("Unable to read builtin data. Welp.\n\n Press A or Start to exit");
-                    waitForInput(prevkeys);
-                    return 0;
-                }
-            }
-        }
-        
-        fread(&filebuffer, 4, 1, *dat);
-        return 1;*/
     }
     // create file to write to
     else
@@ -503,12 +526,8 @@ bool handleFile(FILE** dat, u16* prevkeys, u8 mode)
 //=REWINDING==============================================================================
 //========================================================================================
 
-void rewindData(FILE* dat, int iteration)
+void rewindData(int iteration)
 {
-    /*u8 tempbuffer;
-    fseek(dat, 2, SEEK_SET); // seek to after version data
-    fread(&filebuffer, 4, 1, dat); // reinit filebuffer
-    shift = 0; // reset shift*/
     filebuffer = 0;
     shift = 0;
     pointer = 2;
@@ -519,10 +538,6 @@ void rewindData(FILE* dat, int iteration)
         {
             while (shift >= 8)
             {
-                /*fread(&tempbuffer, 1, 1, dat);
-                filebuffer <<= 8;
-                filebuffer |= tempbuffer;
-                shift -= 8;*/
                 readData(&filebuffer, 1);
                 shift -=8;
             }
@@ -546,7 +561,7 @@ void drawPoly(int iteration)
     glMatrixMode(GL_MODELVIEW);
 
     glPolyFmt(Dataset[iteration].PolyAttr);
-    glEnable(Dataset[iteration].DISP3DCNT);
+    glEnable(Dataset[iteration].Disp3DCnt);
 
     int verts;
     if (Dataset[iteration].Vertices[3][0] != -512)
@@ -574,7 +589,7 @@ void drawPoly(int iteration)
     REG_DISPCAPCNT |= DCAP_ENABLE;
     while(REG_DISPCAPCNT & DCAP_ENABLE);
 
-    glDisable(Dataset[iteration].DISP3DCNT);
+    glDisable(Dataset[iteration].Disp3DCnt);
 }
 
 //========================================================================================
@@ -588,24 +603,16 @@ u8 getSpanPoint()
     return ret;
 }
 
-bool test(FILE* dat, bool wireframe)
+bool test(bool wireframe)
 {
-    //u8 tempbuffer;
     bool errorfound = false;
 
     for (int y = 0; y < 192; y++)
     {
-        if (dat != nullptr)
+        while (shift >= 8)
         {
-            while (shift >= 8)
-            {
-                readData(&filebuffer, 1);
-                shift -=8;
-                /*fread(&tempbuffer, 1, 1, dat);
-                filebuffer <<= 8;
-                filebuffer |= tempbuffer;
-                shift -= 8;*/
-            }
+            readData(&filebuffer, 1);
+            shift -=8;
         }
         if (filebuffer & (1 << (31-shift)))
         {
@@ -623,10 +630,6 @@ bool test(FILE* dat, bool wireframe)
                         
                         readData(&filebuffer, 1);
                         shift -=8;
-                        /*fread(&tempbuffer, 1, 1, dat);
-                        filebuffer <<= 8;
-                        filebuffer |= tempbuffer;
-                        shift -= 8;*/
                     }
                     startspan = getSpanPoint();
                     endspan = getSpanPoint();
@@ -872,7 +875,7 @@ int main()
             {
                 mode = 3; // finished mode
                 iteration--;
-                rewindData(dat, iteration);
+                rewindData(iteration);
             }
         }
 
@@ -888,7 +891,7 @@ int main()
                 showresults = (mode >= 2);
                 bool errorfound;
 
-                showresults |= errorfound = test(dat, !(Dataset[iteration].PolyAttr & Opaque));
+                showresults |= errorfound = test(!(Dataset[iteration].PolyAttr & Opaque));
 
                 if (!TestCompletionTracker[iteration])
                 {
@@ -940,7 +943,7 @@ int main()
                 iteration--;
                 if (iteration < 0)
                     iteration = 0;
-                rewindData(dat, iteration);
+                rewindData(iteration);
             }
         }
 
