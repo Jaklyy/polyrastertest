@@ -364,7 +364,7 @@ void record(FILE* dat, bool wireframe)
 
 int main()
 {
-	consoleDemoInit();
+	PrintConsole* print = consoleDemoInit();
 
     videoSetMode(MODE_0_3D);
 
@@ -418,7 +418,11 @@ int main()
                     | DCAP_OFFSET(0)
                     | DCAP_BANK(DCAP_BANK_VRAM_A);
 
+
     bool TestCompletionTracker[NumEntries];
+    for (int i = 0; i < NumEntries; i++)
+        TestCompletionTracker[i] = 0;
+
     bool showresults = 0;
     int numcomplete = 0;
     int numpass = 0;
@@ -446,6 +450,10 @@ int main()
                 }
                 consoleClear();
                 printf("Recording Done.\n\nNew datafile present in rom\ndirectory.\n\nPress A or Start to quit.\n");
+                print->cursorY = 23;
+                printf("Ver. ");
+                printf(Version);
+
                 fclose(dat);
                 waitForInput(&prevkeys);
                 return 0;
@@ -496,12 +504,20 @@ int main()
                     printf("Testing %i...\n\n", iteration+1);
                 }
                 printf("Green: Matching Pixel.\nRed: Missing Pixel.\nPink: Overdrawn Pixel.\n");
+                
+                print->cursorY = 23;
+                printf("Ver. ");
+                printf(Version);
             }
             else // recording new data file
             {
                 consoleClear();
                 printf("Recording %i...\n", iteration+1);
 
+                print->cursorY = 23;
+                printf("Ver. ");
+                printf(Version);
+                
                 record(dat, !(Dataset[iteration].PolyAttr & Opaque));
                 iteration++;
             }
