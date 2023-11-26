@@ -15,6 +15,7 @@ constexpr u32 Wireframe = (0 << 16);
 //ph
 
 // Colors
+constexpr u16 ColorStock    = 0b111111111111111; // white
 constexpr u16 ColorMissing  = 0b000000000011111; // red
 constexpr u16 ColorOverdraw = 0b111110000011111; // neon pink
 constexpr u16 ColorMatch    = 0b000001111100000; // green
@@ -42,7 +43,7 @@ constexpr Dataset Dataset[] =
     {{{-32, -32, 0}, {32, -32, 0}, {32, 16, 0}, {-512, -512, 0}},
         Opaque | POLY_CULL_NONE,
         0,
-        1},
+        0},
     // Left Pos. Diagonal - fill
     {{{-32, -32, 0}, {32, -32, 0}, {32, 32, 0}, {-512, -512, 0}},
         Opaque | POLY_CULL_NONE,
@@ -153,7 +154,7 @@ constexpr Dataset Dataset[] =
     {{{-32, -32, 0}, {32, -32, 0}, {32, 16, 0}, {-512, -512, 0}},
         Wireframe | POLY_CULL_NONE,
         0,
-        1},
+        0},
     // Anti-Aliasing - Fill
     {{{-32, -32, 0}, {32, -32, 0}, {32, 16, 0}, {-512, -512, 0}},
         Opaque | POLY_CULL_NONE,

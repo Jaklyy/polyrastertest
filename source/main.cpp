@@ -455,7 +455,7 @@ int main()
     glClearPolyID(63);
     glClearDepth(GL_MAX_DEPTH);
 
-    glSetOutlineColor(0, 0b111111111111111);
+    glSetOutlineColor(0, ColorStock);
 
     glViewport(0,0,255,191);
 
