@@ -18,7 +18,7 @@ constexpr u32 Wireframe = (0 << 16);
 constexpr u16 ColorMissing  = 0b000000000011111; // red
 constexpr u16 ColorOverdraw = 0b111110000011111; // neon pink
 constexpr u16 ColorMatch    = 0b000001111100000; // green
-constexpr u16 ColorTextureER= 0b011110011111111; // light pink (purple?)
+constexpr u16 ColorTextureER= 0b111110000000000; // blue
 constexpr u16 ColorVoid     = 0b000000000000000; // black
 
 // only increment if the actual tests change, (only do on releases?)
@@ -42,7 +42,7 @@ constexpr Dataset Dataset[] =
     {{{-32, -32, 0}, {32, -32, 0}, {32, 16, 0}, {-512, -512, 0}},
         Opaque | POLY_CULL_NONE,
         0,
-        0},
+        1},
     // Left Pos. Diagonal - fill
     {{{-32, -32, 0}, {32, -32, 0}, {32, 32, 0}, {-512, -512, 0}},
         Opaque | POLY_CULL_NONE,
@@ -153,7 +153,7 @@ constexpr Dataset Dataset[] =
     {{{-32, -32, 0}, {32, -32, 0}, {32, 16, 0}, {-512, -512, 0}},
         Wireframe | POLY_CULL_NONE,
         0,
-        0},
+        1},
     // Anti-Aliasing - Fill
     {{{-32, -32, 0}, {32, -32, 0}, {32, 16, 0}, {-512, -512, 0}},
         Opaque | POLY_CULL_NONE,
@@ -299,6 +299,10 @@ constexpr Dataset Dataset[] =
         Trans | POLY_CULL_NONE,
         GL_BLEND,
         0},
+    {{{72, 45, 0}, {-63, 65}, {65, 65, 0}, {65, -63, 0}},
+        Trans | POLY_CULL_NONE,
+        GL_BLEND,
+        0},
 
 // Category: Anti-Aliasing ===================================
 
@@ -382,6 +386,11 @@ constexpr Dataset Dataset[] =
     // left side has precedence over right side
     // Just an innocent square c:
     {{{-32, -32, 0}, {-32, 32, 0}, {32, 33, 0}, {32, -32, 0}},
+        Opaque | POLY_CULL_NONE,
+        0,
+        0},
+    // Evil square
+    {{{-32, -32, 0}, {-32, 33, 0}, {32, 32, 0}, {32, -32, 0}},
         Opaque | POLY_CULL_NONE,
         0,
         0},

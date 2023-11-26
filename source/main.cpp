@@ -16,7 +16,7 @@
 // each span is followed by one set of 5/10/15 bits for each pixel representing color, depending on the color read bits
 
 // global variables because im lazy
-u32 filebuffer = 0;
+u32 filebuffer = 0; // life would be so much easier if this were 64 bit but i cba to figure out why changing that keeps breaking
 u32 pointer = 0;
 u8 shift = 0;
 
@@ -28,7 +28,7 @@ u32 readData(u32 buffer, const u8 bytes)
 {
     for (int i = 0; i < bytes; i++)
     {
-        if (pointer >= rastertest_data_size) return;
+        if (pointer >= rastertest_data_size) return buffer << 8;
 
         buffer <<= 8;
         buffer |= rastertest_data[pointer];
@@ -39,9 +39,10 @@ u32 readData(u32 buffer, const u8 bytes)
 
 u32 writeBuffer(u32 buffer, const int value, const u8 bits)
 {
-    *buffer <<= bits;
-    *buffer |= value;
+    buffer <<= bits;
+    buffer |= value;
     shift += bits;
+
     return buffer;
 }
 
@@ -49,10 +50,24 @@ void writeFile(FILE* dat)
 {
     while (shift >= 8)
     {
-        u8 tempbuffer = (filebuffer >> (shift-8)) & 0xFF;
+        u8 tempbuffer = ((filebuffer >> (shift-8)) & 0xFF);
         fwrite(&tempbuffer, 1, 1, dat);
         shift -= 8;
     }
+}
+
+u8 getSpanPoint()
+{
+    u8 ret = ((filebuffer >> (24-shift)) & 0xFF);
+    shift += 8;
+    return ret;
+}
+
+u16 getColor(const u8 bits, const u16 mask)
+{
+    u8 ret = ((filebuffer >> ((32-bits)-shift)) & mask);
+    shift += bits;
+    return ret;
 }
 
 u16 waitForInput(u16* prevkeys)
@@ -141,12 +156,32 @@ void rewindData(const int iteration)
                 filebuffer = readData(filebuffer, 1);
                 shift -=8;
             }
-            if ((filebuffer & (1 << (31 - shift))) == 0)
-                shift++;
-            else if (!(Dataset[i].PolyAttr & Opaque))
-                shift += 33;
+            if ((filebuffer & (1 << (31 - shift))) == 0) shift++;
+            else if (Dataset[i].ColorMode == 0)
+            {
+                if (!(Dataset[i].PolyAttr & Opaque)) shift += 33;
+                else shift += 17;
+            }
             else
-                shift += 17;
+            {
+                shift++;
+                u8 bits = Dataset[i].ColorMode * 5;
+                for (int k = 0; k <= (!(Dataset[i].PolyAttr & Opaque)); k++)
+                {
+                    u8 start = getSpanPoint();
+                    u8 end = getSpanPoint();
+                    if (k == 1 && start == 0) break;
+                    for (; start <= end; start++)
+                    {
+                        shift += bits;
+                        while (shift >= 8)
+                        {
+                            filebuffer = readData(filebuffer, 1);
+                            shift -=8;
+                        }
+                    }
+                }
+            }
         }
     }
 }
@@ -196,20 +231,6 @@ void drawPoly(const int iteration)
 //=TESTING================================================================================
 //========================================================================================
 
-u8 getSpanPoint()
-{
-    u8 ret = ((filebuffer >> (24-shift)) & 0xFF);
-    shift += 8;
-    return ret;
-}
-
-u16 getColor(const u8 bits, const u16 mask)
-{
-    u8 ret = ((filebuffer >> (32-bits-shift)) & mask);
-    shift += bits;
-    return ret;
-}
-
 bool test(const bool wireframe, const u8 colormode)
 {
     u16 mask;
@@ -254,7 +275,6 @@ bool test(const bool wireframe, const u8 colormode)
                 {
                     for (int i = 0; i < 2; i++)
                     {
-                        
                         filebuffer = readData(filebuffer, 1);
                         shift -=8;
                     }
@@ -264,32 +284,35 @@ bool test(const bool wireframe, const u8 colormode)
                 }
 
                 u16 offset = y * 256 + x;
-                u16 currcolor = VRAM_A[offset];
+                u16 currcolor = VRAM_A[offset] & 0x7FFF;
                 if (currcolor == ColorVoid)
                 {
                     if (!(x < startspan || x > endspan))
                     {
-                        VRAM_A[offset] = ColorMissing;
+                        VRAM_A[offset] = (VRAM_A[offset] & ~0x7FFF) | ColorMissing;
                         errorfound = true;
                     }
                 }
                 else if (x < startspan || x > endspan)
                 {
-                    VRAM_A[offset] = ColorOverdraw;
+                    VRAM_A[offset] = (VRAM_A[offset] & ~0x7FFF) | ColorOverdraw;
                     errorfound = true;
                 }
                 else
                 {
-                    if (colormode)
+                    if (colormode != 0)
                     {
-                        if (bits > 8) filebuffer = readData(filebuffer, 2);
-                        else filebuffer = readData(filebuffer, 1); 
+                        while (bits+shift > 32)
+                        {
+                            filebuffer = readData(filebuffer, 1);
+                            shift -= 8;
+                        }
+                        u16 color = getColor(bits, mask);
 
-                        color = getColor(bits, mask);
-                        if ((currcolor & mask) != color) VRAM_A[offset] = ColorTextureER;
-                        else ColorMatch;
+                        if ((currcolor & mask) != color) VRAM_A[offset] = (VRAM_A[offset] & ~0x7FFF) | ColorTextureER;
+                        else VRAM_A[offset] = (VRAM_A[offset] & ~0x7FFF) | ColorMatch;
                     }
-                    else VRAM_A[offset] = ColorMatch;
+                    else VRAM_A[offset] = (VRAM_A[offset] & ~0x7FFF) | ColorMatch;
                 }
             }
         }
@@ -303,7 +326,7 @@ bool test(const bool wireframe, const u8 colormode)
                 u16 currcolor = VRAM_A[offset] & 0x7FFF;
                 if (currcolor != ColorVoid)
                 {
-                    VRAM_A[offset] = ColorOverdraw;
+                    VRAM_A[offset] = (VRAM_A[offset] & ~0x7FFF) | ColorOverdraw;
                     errorfound = true;               
                 }
             }
@@ -340,16 +363,27 @@ void record(FILE* dat, const bool wireframe, const u8 colormode)
     }
 
     u16 colorbuffer[256];
-    for (int y = 0; y < 128; y++)
+    for (int y = 0; y < 192; y++)
     {
         s16 start;
         s16 end;
-        for (int i = 0, x = 0;; i++)
+        int x = 0;
+        bool nospan = false;
+        for (int i = 0;; i++)
         {
             if (i != 0)
             {
                 writeFile(dat);
-                if (start == -1) filebuffer = writeBuffer(filebuffer, 0, 1);
+                if (start == -1)
+                {
+                    if (i == 1)
+                    {
+                        nospan = true;
+                        filebuffer = writeBuffer(filebuffer, 0, 1);
+                    }
+                    else if (nospan == false) filebuffer = writeBuffer(filebuffer, 0, 16);
+                    writeFile(dat);
+                }
                 else
                 {
                     if (end == -1)
@@ -358,9 +392,9 @@ void record(FILE* dat, const bool wireframe, const u8 colormode)
                         writeFile(dat);
                     }
 
-                    if (colormode)
+                    if (colormode != 0)
                     {
-                        for (int j = start; j <= end; j++)
+                        for (; start <= end; start++)
                         {
                             filebuffer = writeBuffer(filebuffer, colorbuffer[start], bits);
                             writeFile(dat);
@@ -376,27 +410,29 @@ void record(FILE* dat, const bool wireframe, const u8 colormode)
             bool prevpixel = 0;
             for (; x < 256; x++)
             {
-                u16 color = VRAM_A[y*256+x];
+                u16 color = VRAM_A[y*256+x] & 0x7FFF;
                 if (color == ColorVoid)
-                    if (prevpixel)
+                {
+                    if (prevpixel != 0)
                     {
                         end = x-1;
                         filebuffer = writeBuffer(filebuffer, x-1, 8);
                         x++;
                         break;
                     }
+                }
                 else
                 {
-                    if (!prevpixel)
+                    if (prevpixel == 0)
                     {
-                        if (!i) filebuffer = writeBuffer(filebuffer, 1, 1);
+                        if (i == 0) filebuffer = writeBuffer(filebuffer, 1, 1);
 
                         start = x;
                         filebuffer = writeBuffer(filebuffer, x, 8);
+                        prevpixel = 1;
                     }
 
-                    if (colormode)
-                        colorbuffer[x] = color & mask;
+                    if (colormode != 0) colorbuffer[x] = color & mask;
                 }
             }
         }
