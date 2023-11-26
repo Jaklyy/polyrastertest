@@ -9,28 +9,49 @@
 
 // Notes on Datafile Format:
 // 16 bits for version
+// each scene has 2 bits to determine how many colors should be read
 // each scanline has 1 bit for filled, 8 bits for start of span, 8 bits for end of span
 // the 16 bits for span start/end are left out if not filled
-// wireframe polygons have 32 bits, adding room for storing data for the potential second span.
+// wireframe polygons have 32 bits, adding room to store data for the potential second span.
+// each span is followed by one set of 5/10/15 bits for each pixel representing color, depending on the color read bits
 
 // global variables because im lazy
-u32 filebuffer;
-u32 pointer;
-u8 shift;
+u32 filebuffer = 0;
+u32 pointer = 0;
+u8 shift = 0;
 
 //========================================================================================
 //=MISC===================================================================================
 //========================================================================================
 
-void readData(u32* buffer, const u8 bytes)
+u32 readData(u32 buffer, const u8 bytes)
 {
     for (int i = 0; i < bytes; i++)
     {
         if (pointer >= rastertest_data_size) return;
 
-        *buffer <<= 8;
-        *buffer |= rastertest_data[pointer];
+        buffer <<= 8;
+        buffer |= rastertest_data[pointer];
         pointer++;
+    }
+    return buffer;
+}
+
+u32 writeBuffer(u32 buffer, const int value, const u8 bits)
+{
+    *buffer <<= bits;
+    *buffer |= value;
+    shift += bits;
+    return buffer;
+}
+
+void writeFile(FILE* dat)
+{
+    while (shift >= 8)
+    {
+        u8 tempbuffer = (filebuffer >> (shift-8)) & 0xFF;
+        fwrite(&tempbuffer, 1, 1, dat);
+        shift -= 8;
     }
 }
 
@@ -51,14 +72,14 @@ u16 waitForInput(u16* prevkeys)
 //=FILE=OPEN==============================================================================
 //========================================================================================
 
-bool handleFile(FILE** dat, u16* prevkeys, u8 mode)
+bool handleFile(FILE** dat, u16* prevkeys, const u8 mode)
 {
     // open file to read from
     if (mode != 1)
     {
         u32 version = 0;
         pointer = 0;
-        readData(&version, 2);
+        version = readData(version, 2);
         if (version != DataVersion)
         {
             printf("Data has non-matching version\nnumber.\n\nPress A or Start to quit.\n");
@@ -68,7 +89,7 @@ bool handleFile(FILE** dat, u16* prevkeys, u8 mode)
         
         shift = 0;
         filebuffer = 0;
-        readData(&filebuffer, 4);
+        filebuffer = readData(filebuffer, 4);
     }
     // create file to write to
     else
@@ -95,7 +116,8 @@ bool handleFile(FILE** dat, u16* prevkeys, u8 mode)
         buffer = DataVersion & 0xFF;
         fwrite(&buffer, 1, 1, *dat);
         
-        shift = 32;
+        shift = 0;
+        filebuffer = 0;
     }
     return 1;
 }
@@ -104,19 +126,19 @@ bool handleFile(FILE** dat, u16* prevkeys, u8 mode)
 //=REWINDING==============================================================================
 //========================================================================================
 
-void rewindData(int iteration)
+void rewindData(const int iteration)
 {
     filebuffer = 0;
     shift = 0;
     pointer = 2;
-    readData(&filebuffer, 4);
+    filebuffer = readData(filebuffer, 4);
     for (int i = 0; i < iteration; i++)
     {
         for (int j = 0; j < 192; j++)
         {
             while (shift >= 8)
             {
-                readData(&filebuffer, 1);
+                filebuffer = readData(filebuffer, 1);
                 shift -=8;
             }
             if ((filebuffer & (1 << (31 - shift))) == 0)
@@ -133,7 +155,7 @@ void rewindData(int iteration)
 //=DRAWING================================================================================
 //========================================================================================
 
-void drawPoly(int iteration)
+void drawPoly(const int iteration)
 {
     glPushMatrix();
     glMatrixMode(GL_MODELVIEW);
@@ -181,7 +203,7 @@ u8 getSpanPoint()
     return ret;
 }
 
-bool test(bool wireframe)
+bool test(const bool wireframe)
 {
     bool errorfound = false;
 
@@ -189,7 +211,7 @@ bool test(bool wireframe)
     {
         while (shift >= 8)
         {
-            readData(&filebuffer, 1);
+            filebuffer = readData(filebuffer, 1);
             shift -=8;
         }
         if (filebuffer & (1 << (31-shift)))
@@ -206,7 +228,7 @@ bool test(bool wireframe)
                     for (int i = 0; i < 2; i++)
                     {
                         
-                        readData(&filebuffer, 1);
+                        filebuffer = readData(filebuffer, 1);
                         shift -=8;
                     }
                     startspan = getSpanPoint();
@@ -259,103 +281,88 @@ bool test(bool wireframe)
 //=RECORDING==============================================================================
 //========================================================================================
 
-void record(FILE* dat, bool wireframe)
+void record(FILE* dat, const bool wireframe, const u8 numcolors)
 {
-    s16 start = -1;
-    s16 end = -1;
-    s16 start2 = -1;
-    s16 end2 = -1;
-
-    for (int y = 0;; y++)
+    u16 mask;
+    u8 bits;
+    switch (numcolors)
     {
-        if (y != 0) // dont write on the first loop
+    case 1:
+        mask = 0x1F;
+        bits = 5;
+        break;
+    case 2:
+        mask = 0x3FF;
+        bits = 10;
+        break;
+    default:
+        mask = 0x7FFF;
+        bits = 15;
+        break;
+    }
+
+    u16 colorbuffer[256];
+    for (int y = 0; y < 128; y++)
+    {
+        s16 start;
+        s16 end;
+        for (int i = 0, x = 0;; i++)
         {
-            if (start == -1)
-                shift--;
-            else
+            if (i != 0)
             {
-                shift--;
-                filebuffer |= (1<<shift);
-
-                if (end == -1) end = 255;
-                
-                shift -= 8;
-                filebuffer |= (start<<shift);
-
-                shift -= 8;
-                filebuffer |= (end<<shift);
-
-                if (wireframe)
+                writeFile(dat);
+                if (start == -1) filebuffer = writeBuffer(filebuffer, 0, 1);
+                else
                 {
-                    for (int i = 0; i < 2; i++)
+                    if (end == -1)
                     {
-                        u8 tempbuffer = filebuffer >> 24;
-                        fwrite(&tempbuffer, 1, 1, dat);
-                        filebuffer <<= 8;
-                        shift += 8;
+                        filebuffer = writeBuffer(filebuffer, 255, 8);
+                        writeFile(dat);
                     }
 
-                    if (start2 == -1)
+                    if (numcolors)
                     {
-                        shift -= 16;
-                    }
-                    else
-                    {
-                        if (end2 == -1) end2 = 255;
-
-                        shift -=8;
-                        filebuffer |= (start2<<shift);
-                        shift -= 8;
-                        filebuffer |= (end2<<shift);
+                        for (int j = start; j <= end; j++)
+                        {
+                            filebuffer = writeBuffer(filebuffer, colorbuffer[start], bits);
+                            writeFile(dat);
+                        }
                     }
                 }
             }
 
-            while (shift <= 24)
-            {
-                u8 tempbuffer = filebuffer >> 24;
-                fwrite(&tempbuffer, 1, 1, dat);
-                filebuffer <<= 8;
-                shift += 8;
-            }
-        }
-        
-        if (y == 192) //dont check on final loop
-            break;
+            if (i > wireframe) break; // only loop once if wireframe is not enabled, loop twice if it is.
 
-        start = -1;
-        end = -1;
-        start2 = -1;
-        end2 = -1;
-        int x = 0;
-        for (int i = 0; i <= wireframe; i++)
-        {
+            start = -1;
+            end = -1;
             bool prevpixel = 0;
             for (; x < 256; x++)
             {
-                if ((VRAM_A[y*256+x] & 0x7FFF) != ColorVoid)
-                {
-                    if (prevpixel == 0)
-                    {   
-                        if (!i)
-                            start = x;
-                        else
-                            start2 = x;
-                        prevpixel = 1;
-                    }
-                }
-                else if (prevpixel == 1)
-                {
-                    if (!i)
+                u16 color = VRAM_A[y*256+x];
+                if (color == ColorVoid)
+                    if (prevpixel)
+                    {
                         end = x-1;
-                    else
-                        end2 = x-1;
-                    x++;
-                    break;
+                        filebuffer = writeBuffer(filebuffer, x-1, 8);
+                        x++;
+                        break;
+                    }
+                else
+                {
+                    if (!prevpixel)
+                    {
+                        if (!i) filebuffer = writeBuffer(filebuffer, 1, 1);
+
+                        start = x;
+                        filebuffer = writeBuffer(filebuffer, x, 8);
+                    }
+
+                    if (numcolors)
+                        colorbuffer[x] = color & mask;
                 }
             }
         }
-    }     
+    }  
 }
 
 //========================================================================================
@@ -518,7 +525,7 @@ int main()
                 printf("Ver. ");
                 printf(Version);
                 
-                record(dat, !(Dataset[iteration].PolyAttr & Opaque));
+                record(dat, !(Dataset[iteration].PolyAttr & Opaque), Dataset[iteration].Colors);
                 iteration++;
             }
         }
