@@ -18,6 +18,7 @@ constexpr u32 Wireframe = (0 << 16);
 constexpr u16 ColorMissing  = 0b000000000011111; // red
 constexpr u16 ColorOverdraw = 0b111110000011111; // neon pink
 constexpr u16 ColorMatch    = 0b000001111100000; // green
+constexpr u16 ColorTextureER= 0b011110011111111; // light pink (purple?)
 constexpr u16 ColorVoid     = 0b000000000000000; // black
 
 // only increment if the actual tests change, (only do on releases?)
@@ -28,7 +29,7 @@ struct Dataset
     s16 Vertices[NumVerts][NumAxis]; // Coordinates of each vertex x,y,z
     u32 PolyAttr; // Polygons attributes for each test
     u32 Disp3DCnt; // 3D Display Control Register bits to enable for each test
-    u8 Colors; // How many colors to read/record from/to the data file: 0-3 = none, r, rg, rgb
+    u8 ColorMode; // How many colors to read/record from/to the data file: 0-3 = none, r, rg, rgb
 };
 
 constexpr Dataset Dataset[] =

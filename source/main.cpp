@@ -203,8 +203,35 @@ u8 getSpanPoint()
     return ret;
 }
 
-bool test(const bool wireframe)
+u16 getColor(const u8 bits, const u16 mask)
 {
+    u8 ret = ((filebuffer >> (32-bits-shift)) & mask);
+    shift += bits;
+    return ret;
+}
+
+bool test(const bool wireframe, const u8 colormode)
+{
+    u16 mask;
+    u8 bits;
+    switch (colormode)
+    {
+    case 0:
+        break;
+    case 1:
+        mask = 0x1F;
+        bits = 5;
+        break;
+    case 2:
+        mask = 0x3FF;
+        bits = 10;
+        break;
+    default:
+        mask = 0x7FFF;
+        bits = 15;
+        break;
+    }
+
     bool errorfound = false;
 
     for (int y = 0; y < 192; y++)
@@ -237,23 +264,32 @@ bool test(const bool wireframe)
                 }
 
                 u16 offset = y * 256 + x;
-                u16 currcolor = VRAM_A[offset] & 0x7FFF;
+                u16 currcolor = VRAM_A[offset];
                 if (currcolor == ColorVoid)
                 {
                     if (!(x < startspan || x > endspan))
                     {
-                        VRAM_A[offset] = (VRAM_A[offset] & ~0x7FFF) | ColorMissing;
+                        VRAM_A[offset] = ColorMissing;
                         errorfound = true;
                     }
                 }
                 else if (x < startspan || x > endspan)
                 {
-                    VRAM_A[offset] = (VRAM_A[offset] & ~0x7FFF) | ColorOverdraw;
+                    VRAM_A[offset] = ColorOverdraw;
                     errorfound = true;
                 }
                 else
                 {
-                    VRAM_A[offset] = (VRAM_A[offset] & ~0x7FFF) | ColorMatch;
+                    if (colormode)
+                    {
+                        if (bits > 8) filebuffer = readData(filebuffer, 2);
+                        else filebuffer = readData(filebuffer, 1); 
+
+                        color = getColor(bits, mask);
+                        if ((currcolor & mask) != color) VRAM_A[offset] = ColorTextureER;
+                        else ColorMatch;
+                    }
+                    else VRAM_A[offset] = ColorMatch;
                 }
             }
         }
@@ -281,12 +317,14 @@ bool test(const bool wireframe)
 //=RECORDING==============================================================================
 //========================================================================================
 
-void record(FILE* dat, const bool wireframe, const u8 numcolors)
+void record(FILE* dat, const bool wireframe, const u8 colormode)
 {
     u16 mask;
     u8 bits;
-    switch (numcolors)
+    switch (colormode)
     {
+    case 0:
+        break;
     case 1:
         mask = 0x1F;
         bits = 5;
@@ -320,7 +358,7 @@ void record(FILE* dat, const bool wireframe, const u8 numcolors)
                         writeFile(dat);
                     }
 
-                    if (numcolors)
+                    if (colormode)
                     {
                         for (int j = start; j <= end; j++)
                         {
@@ -357,7 +395,7 @@ void record(FILE* dat, const bool wireframe, const u8 numcolors)
                         filebuffer = writeBuffer(filebuffer, x, 8);
                     }
 
-                    if (numcolors)
+                    if (colormode)
                         colorbuffer[x] = color & mask;
                 }
             }
@@ -452,7 +490,7 @@ int main()
                 // make sure nothing got left behind in the buffer
                 if (shift < 32)
                 {
-                    u8 tempbuffer = (filebuffer >> 24);
+                    u8 tempbuffer = (filebuffer << (8-shift));
                     fwrite(&tempbuffer, 1, 1, dat);
                 }
                 consoleClear();
@@ -485,7 +523,7 @@ int main()
                 showresults = (mode >= 2);
                 bool errorfound;
 
-                showresults |= errorfound = test(!(Dataset[iteration].PolyAttr & Opaque));
+                showresults |= errorfound = test(!(Dataset[iteration].PolyAttr & Opaque), Dataset[iteration].ColorMode);
 
                 if (!TestCompletionTracker[iteration])
                 {
@@ -525,7 +563,7 @@ int main()
                 printf("Ver. ");
                 printf(Version);
                 
-                record(dat, !(Dataset[iteration].PolyAttr & Opaque), Dataset[iteration].Colors);
+                record(dat, !(Dataset[iteration].PolyAttr & Opaque), Dataset[iteration].ColorMode);
                 iteration++;
             }
         }
