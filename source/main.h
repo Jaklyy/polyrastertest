@@ -28,9 +28,9 @@ constexpr u16 DataVersion = 1;
 struct Dataset
 {
     s16 Vertices[NumVerts][NumAxis]; // Coordinates of each vertex x,y,z
-    u32 PolyAttr; // Polygons attributes for each test
-    u32 Disp3DCnt; // 3D Display Control Register bits to enable for each test
-    u8 ColorMode; // How many colors to read/record from/to the data file: 0-3 = none, r, rg, rgb
+    u32 PolyAttr = Opaque | POLY_CULL_NONE; // Polygons attributes for each test
+    u32 Disp3DCnt = 0; // 3D Display Control Register bits to enable for each test
+    u8 ColorMode = 0; // How many colors to read/record from/to the data file: 0-3 = none, r, rg, rgb
 };
 
 constexpr Dataset Dataset[] =
@@ -40,131 +40,68 @@ constexpr Dataset Dataset[] =
   // Sub Cat: Normal ----------------------------------------
 
     // Left Pos. X-Major - no fill
-    {{{-32, -32, 0}, {32, -32, 0}, {32, 16, 0}, {-512, -512, 0}},
-        Opaque | POLY_CULL_NONE,
-        0,
-        0},
+        {.Vertices = {{-32, -32}, {32, -32}, {32, 16}, {-512}}},
     // Left Pos. Diagonal - fill
-    {{{-32, -32, 0}, {32, -32, 0}, {32, 32, 0}, {-512, -512, 0}},
-        Opaque | POLY_CULL_NONE,
-        0,
-        0},
+        {.Vertices = {{-32, -32}, {32, -32}, {32, 32}, {-512}}},
     // Left Pos. Y-Major - fill
-    {{{-32, -32, 0}, {32, -32, 0}, {32, 48, 0}, {-512, -512, 0}},
-        Opaque | POLY_CULL_NONE,
-        0,
-        0},
+        {.Vertices = {{-32, -32}, {32, -32}, {32, 48}, {-512}}},
     // Left Neg. X-Major - fill
-    {{{-32, 32, 0}, {32, 32, 0}, {32, -16, 0}, {-512, -512, 0}},
-        Opaque | POLY_CULL_NONE,
-        0,
-        0},
+        {.Vertices = {{-32, 32}, {32, 32}, {32, -16}, {-512}}},
     // Left Neg. Diagonal - fill
-    {{{-32, 32, 0}, {32, 32, 0}, {32, -32, 0}, {-512, -512, 0}},
-        Opaque | POLY_CULL_NONE,
-        0,
-        0},
+        {.Vertices = {{-32, 32}, {32, 32}, {32, -32}, {-512}}},
     // Left Neg. Y-Major - fill
-    {{{-32, 32, 0}, {32, 32, 0}, {32, -48, 0}, {-512, -512, 0}},
-        Opaque | POLY_CULL_NONE,
-        0,
-        0},
+        {.Vertices = {{-32, 32}, {32, 32}, {32, -48}, {-512}}},
     // Right Pos. X-Major - fill
-    {{{32, -32, 0}, {-32, -32, 0}, {-32, 16, 0}, {-512, -512, 0}},
-        Opaque | POLY_CULL_NONE,
-        0,
-        0},
+        {.Vertices = {{32, -32}, {-32, -32}, {-32, 16}, {-512}}},
     // Right Pos. Diagonal - no fill
-    {{{32, -32, 0}, {-32, -32, 0}, {-32, 32, 0}, {-512, -512, 0}},
-        Opaque | POLY_CULL_NONE,
-        0,
-        0},
+        {.Vertices = {{32, -32}, {-32, -32}, {-32, 32}, {-512}}},
     // Right Pos. Y-Major - no fill
-    {{{32, -32, 0}, {-32, -32, 0}, {-32, 48, 0}, {-512, -512, 0}},
-        Opaque | POLY_CULL_NONE,
-        0,
-        0},
+        {.Vertices = {{32, -32}, {-32, -32}, {-32, 48}, {-512}}},
     // Right Neg. X-Major - no fill
-    {{{32, 32, 0}, {-32, 32, 0}, {-32, -16, 0}, {-512, -512, 0}},
-        Opaque | POLY_CULL_NONE,
-        0,
-        0},
+        {.Vertices = {{32, 32}, {-32, 32}, {-32, -16}, {-512}}},
     // Right Neg. Diagonal - no fill
-    {{{32, 32, 0}, {-32, 32, 0}, {-32, -32, 0}, {-512, -512, 0}},
-        Opaque | POLY_CULL_NONE,
-        0,
-        0},
-    // 12. Right Neg. Y-Major - no fill
-    {{{32, 32, 0}, {-32, 32, 0}, {-32, -48, 0}, {-512, -512, 0}},
-        Opaque | POLY_CULL_NONE,
-        0,
-        0},
+        {.Vertices = {{32, 32}, {-32, 32}, {-32, -32}, {-512}}},
+    // Right Neg. Y-Major - no fill
+        {.Vertices = {{32, 32}, {-32, 32}, {-32, -48}, {-512}}},
 
   // Sub Cat: Swapped ---------------------------------------
 
     // Fill Rules for swapped polygons *generally* follow the same rules as unswapped polygons
     // Key word being generally. You might notice that vertical right slopes aren't being filled. More on that later.
 
-    // Left X-Major
-    {{{0, -32, 0}, {0, 32, 0}, {48, 32, 0}, {-32, -16, 0}},
-        Opaque | POLY_CULL_NONE,
-        0,
-        0},
-    // Left Y-Major
-    {{{0, -48, 0}, {0, 32, 0}, {16, 32, 0}, {-16, -16, 0}},
-        Opaque | POLY_CULL_NONE,
-        0,
-        0},
-    // Left Diagonal
-    {{{0, -16, 0}, {0, 32, 0}, {16, 32, 0}, {-16, 0, 0}},
-        Opaque | POLY_CULL_NONE,
-        0,
-        0},
-    // Right X-Major
-    {{{0, -32, 0}, {-1, 32, 0}, {-48, 32, 0}, {32, -16, 0}},
-        Opaque | POLY_CULL_NONE,
-        0,
-        0},
-    // Right Y-Major
-    {{{0, -48, 0}, {-1, 32, 0}, {-16, 32, 0}, {16, -16, 0}},
-        Opaque | POLY_CULL_NONE,
-        0,
-        0},
-    // Right Diagonal
-    {{{0, -16, 0}, {-1, 32, 0}, {-16, 32, 0}, {16, 0, 0}},
-        Opaque | POLY_CULL_NONE,
-        0,
-        0},
+    // Left X-Major - top = fill, bot = no fill
+        {.Vertices = {{0, -32}, {0, 32}, {48, 32}, {-32, -16}}},
+    // Left Y-Major - fill
+        {.Vertices = {{0, -48}, {0, 32}, {16, 32}, {-16, -16}}},
+    // Left Diagonal - fill
+        {.Vertices = {{0, -16}, {0, 32}, {16, 32}, {-16, 0}}},
+    // Right X-Major - top = fill, bot = no fill
+        {.Vertices = {{0, -32}, {-1, 32}, {-48, 32}, {32, -16}}},
+    // Right Y-Major - no fill
+        {.Vertices = {{0, -48}, {-1, 32}, {-16, 32}, {16, -16}}},
+    // Right Diagonal - no fill
+        {.Vertices = {{0, -16}, {-1, 32}, {-16, 32}, {16, 0}}},
 
   // Sub Cat: Override---------------------------------------
     
     // There are a few things that can force a polygon to fill all edges.
 
     // Transparency + Blend - Fill
-    {{{-32, -32, 0}, {32, -32, 0}, {32, 16, 0}, {-512, -512, 0}},
-        Trans | POLY_CULL_NONE,
-        GL_BLEND,
-        0},
+        {.Vertices = {{-32, -32}, {32, -32}, {32, 16}, {-512}},
+        .PolyAttr = Trans | POLY_CULL_NONE,
+        .Disp3DCnt = GL_BLEND},
     // Transparency + NO BLEND - no fill
-    {{{-32, -32, 0}, {32, -32, 0}, {32, 16, 0}, {-512, -512, 0}},
-        Trans | POLY_CULL_NONE,
-        0,
-        0},
+        {.Vertices = {{-32, -32}, {32, -32}, {32, 16}, {-512}},
+        .PolyAttr = Trans | POLY_CULL_NONE},
     // Wireframe - Fill
-    {{{-32, -32, 0}, {32, -32, 0}, {32, 16, 0}, {-512, -512, 0}},
-        Wireframe | POLY_CULL_NONE,
-        0,
-        0},
+        {.Vertices = {{-32, -32}, {32, -32}, {32, 16}, {-512}},
+        .PolyAttr = Wireframe | POLY_CULL_NONE},
     // Anti-Aliasing - Fill
-    {{{-32, -32, 0}, {32, -32, 0}, {32, 16, 0}, {-512, -512, 0}},
-        Opaque | POLY_CULL_NONE,
-        GL_ANTIALIAS,
-        0},
+        {.Vertices = {{-32, -32}, {32, -32}, {32, 16}, {-512}},
+        .Disp3DCnt = GL_ANTIALIAS},
     // Edge Marking - Fill
-    {{{-32, -32, 0}, {32, -32, 0}, {32, 16, 0}, {-512, -512, 0}},
-        Opaque | POLY_CULL_NONE,
-        GL_OUTLINE,
-        0},
+        {.Vertices = {{-32, -32}, {32, -32}, {32, 16}, {-512}},
+        .Disp3DCnt = GL_OUTLINE},
 
 // Category: Fill Rules: Unusual =============================
 
@@ -175,35 +112,17 @@ constexpr Dataset Dataset[] =
     // out with all the other weird behavior this gpu has thrown out.
 
     // simple line polygon - fill
-    {{{-10, -5, 0}, {-10, -5, 0}, {10, 5, 0}, {-512, 0, 0}},
-        Opaque | POLY_CULL_NONE,
-        0,
-        0},
+        {.Vertices = {{-10, -5}, {-10, -5}, {10, 5}, {-512}}},
     // not quite a line polygon - no fill
-    {{{-11, -6, 0}, {-10, -5, 0}, {10, 5, 0}, {-512, 0, 0}},
-        Opaque | POLY_CULL_NONE,
-        0,
-        0},
+        {.Vertices = {{-11, -6}, {-10, -5}, {10, 5}, {-512}}},
     // if you can see this you're doing something wrong - no fill
-    {{{-2, -1, 0}, {0, 0, 0}, {2, 1, 0}, {-512, 0, 0}},
-        Opaque | POLY_CULL_NONE,
-        0,
-        0},
+        {.Vertices = {{-2, -1}, {0, 0}, {2, 1}, {-512}}},
     // cursed line polygon 1 - fill, but like, only the line part
-    {{{47, 8, 0}, {-46, -27, 0}, {47, 27, 0}, {-46, -27, 0}},
-        Opaque | POLY_CULL_NONE,
-        0,
-        0},
+        {.Vertices = {{47, 8}, {-46, -27}, {47, 27}, {-46, -27}}},
     // cursed line polygon 2 - see above
-    {{{47, 8, 0}, {-46, -27, 0}, {0, 0, 0}, {-46, -27, 0}},
-        Opaque | POLY_CULL_NONE,
-        0,
-        0},
+        {.Vertices = {{47, 8}, {-46, -27}, {0, 0}, {-46, -27}}},
     // cursed line polygon 3 - fill
-    {{{48, 0, 0}, {0, -27, 0}, {-40, -8, 0}, {0, -27, 0}},
-        Opaque | POLY_CULL_NONE,
-        0,
-        0},
+        {.Vertices = {{48, 0}, {0, -27}, {-40, -8}, {0, -27}}},
 
   // Sub Cat: Swapped Vertical Left Glitch ------------------
 
@@ -212,98 +131,66 @@ constexpr Dataset Dataset[] =
     // oops
 
     // half filled. oh dear.
-    {{{-110, -12, 0}, {-110, 24, 0}, {0, 24, 0}, {-140, 0, 0}},
-        Opaque | POLY_CULL_NONE,
-        0,
-        0},
+        {.Vertices = {{-110, -12}, {-110, 24}, {0, 24}, {-140, 0}}},
     // is the slope half filled or half unfilled?
-    {{{50, -30, 0}, {-30, 50, 0}, {0, 50, 0}, {0, -20, 0}},
-        Opaque | POLY_CULL_NONE,
-        0,
-        0},
+        {.Vertices = {{50, -30}, {-30, 50}, {0, 50}, {0, -20}}},
     // x major slopes are never filled by this glitch, though. - no fill
-    {{{50, -30, 0}, {-20, 20, 0}, {0, 20, 0}, {0, -20, 0}},
-        Opaque | POLY_CULL_NONE,
-        0,
-        0},
+        {.Vertices = {{50, -30}, {-20, 20}, {0, 20}, {0, -20}}},
 
   // Sub Cat: Trapezoids ------------------------------------
 
     // this is a fill rule ...for some reason?
-    {{{-25, 10, 0}, {25, 10, 0}, {50, -10, 0}, {-50, -10, 0}},
-        Opaque | POLY_CULL_NONE,
-        0,
-        0},
+        {.Vertices = {{-25, 10}, {25, 10}, {50, -10}, {-50, -10}}},
     // it applies to clipped vertices too!
-    {{{-50, 90, 0}, {50, 90, 0}, {0, 110, 0}, {-512, 0, 0}},
-        Opaque | POLY_CULL_NONE,
-        0,
-        0},
+        {.Vertices = {{-50, 90}, {50, 90}, {0, 110}, {-512, 0}}},
     // only x major slopes though
-    {{{-25, 10, 0}, {25, 10, 0}, {35, -10, 0}, {-45, -10, 0}},
-        Opaque | POLY_CULL_NONE,
-        0,
-        0},
+        {.Vertices = {{-25, 10}, {25, 10}, {35, -10}, {-45, -10}}},
     // does not work when both the bottom of both slopes have the same x coord
-    {{{0, 10, 0}, {0, 10, 0}, {50, -10, 0}, {-50, -10, 0}},
-        Opaque | POLY_CULL_NONE,
-        0,
-        0},
+        {.Vertices = {{0, 10}, {0, 10}, {50, -10}, {-50, -10}}},
     // even when their y coord is different
-    {{{0, 5, 0}, {0, 10, 0}, {50, -10, 0}, {-50, -10, 0}},
-        Opaque | POLY_CULL_NONE,
-        0,
-        0},
+        {.Vertices = {{0, 5}, {0, 10}, {50, -10}, {-50, -10}}},
 
 // Category: Vertical Right Edge Shift =======================
 
     // vertical right edges are shifted left by one pixel
 
     // square
-    {{{-32, -32, 0}, {-32, 32, 0}, {32, 32, 0}, {32, -32, 0}},
-        Trans | POLY_CULL_NONE,
-        GL_BLEND,
-        0},
+        {.Vertices = {{-32, -32}, {-32, 32}, {32, 32}, {32, -32}},
+        .PolyAttr = Trans | POLY_CULL_NONE,
+        .Disp3DCnt = GL_BLEND},
     // vertical 0 wide line polygon, right edges are *not* shifted left
-    {{{0, -32, 0}, {0, 32, 0}, {0, 32, 0}, {0, -32, 0}},
-        Trans | POLY_CULL_NONE,
-        GL_BLEND,
-        0},
+        {.Vertices = {{0, -32}, {0, 32}, {0, 32}, {0, -32}},
+        .PolyAttr = Trans | POLY_CULL_NONE,
+        .Disp3DCnt = GL_BLEND},
     // vertical 1 wide line polygon, right edges are shifted left
-    {{{0, -32, 0}, {0, 32, 0}, {1, 32, 0}, {1, -32, 0}},
-        Trans | POLY_CULL_NONE,
-        GL_BLEND,
-        0},
+        {.Vertices = {{0, -32}, {0, 32}, {1, 32}, {1, -32}},
+        .PolyAttr = Trans | POLY_CULL_NONE,
+        .Disp3DCnt = GL_BLEND},
     // but not when touching the edge of the screen
     // todo: test if it is shifted left when drawn oob? cause im pretty sure it does matter
-    {{{-128, -32, 0}, {-128, 32, 0}, {-127, 32, 0}, {-127, -32, 0}},
-        Trans | POLY_CULL_NONE,
-        GL_BLEND,
-        0},
+        {.Vertices = {{-128, -32}, {-128, 32}, {-127, 32}, {-127, -32}},
+        .PolyAttr = Trans | POLY_CULL_NONE,
+        .Disp3DCnt = GL_BLEND},
     // swapped polygon 1
-    {{{-32, -32, 0}, {0, -32, 0}, {0, 32, 0}, {32, 32, 0}},
-        Trans | POLY_CULL_NONE,
-        GL_BLEND,
-        0},
+        {.Vertices = {{-32, -32}, {0, -32}, {0, 32}, {32, 32}},
+        .PolyAttr = Trans | POLY_CULL_NONE,
+        .Disp3DCnt = GL_BLEND},
     // swapped polygon 1 reversed
-    {{{32, -32, 0}, {0, -32, 0}, {0, 32, 0}, {-32, 32, 0}},
-        Trans | POLY_CULL_NONE,
-        GL_BLEND,
-        0},
+        {.Vertices = {{32, -32}, {0, -32}, {0, 32}, {-32, 32}},
+        .PolyAttr = Trans | POLY_CULL_NONE,
+        .Disp3DCnt = GL_BLEND},
     // idk what this one even is
-    {{{-32, -32, 0}, {-32, 32, 0}, {32, 0, 0}, {-32, 0, 0}},
-        Trans | POLY_CULL_NONE,
-        GL_BLEND,
-        0},
+        {.Vertices = {{-32, -32}, {-32, 32}, {32, 0}, {-32, 0}},
+        .PolyAttr = Trans | POLY_CULL_NONE,
+        .Disp3DCnt = GL_BLEND},
     // still dont know
-    {{{32, -32, 0}, {32, 32, 0}, {-32, 0, 0}, {32, 0, 0}},
-        Trans | POLY_CULL_NONE,
-        GL_BLEND,
-        0},
-    {{{72, 45, 0}, {-63, 65}, {65, 65, 0}, {65, -63, 0}},
-        Trans | POLY_CULL_NONE,
-        GL_BLEND,
-        0},
+        {.Vertices = {{32, -32}, {32, 32}, {-32, 0}, {32, 0}},
+        .PolyAttr = Trans | POLY_CULL_NONE,
+        .Disp3DCnt = GL_BLEND},
+    // Do note: it isn't always the case that a 0 wide span wont be shifted left.
+        {.Vertices = {{72, 45}, {-63, 65}, {65, 65}, {65, -63}},
+        .PolyAttr = Trans | POLY_CULL_NONE,
+        .Disp3DCnt = GL_BLEND},
 
 // Category: Anti-Aliasing ===================================
 
@@ -313,22 +200,19 @@ constexpr Dataset Dataset[] =
     // ...even though vertical edges shouldn't be
 
     // swapped polygons are very glitchy, it turns out
-    {{{-32, -32, 0}, {0, -32, 0}, {0, 32, 0}, {32, 32, 0}},
-        Opaque | POLY_CULL_NONE,
-        GL_ANTIALIAS,
-        0},
+        {.Vertices = {{-32, -32}, {0, -32}, {0, 32}, {32, 32}},
+        .Disp3DCnt = GL_ANTIALIAS},
     // see above
-    {{{32, -32, 0}, {0, -32, 0}, {0, 32, 0}, {-32, 32, 0}},
-        Opaque | POLY_CULL_NONE,
-        GL_ANTIALIAS,
-        0},
+        {.Vertices = {{32, -32}, {0, -32}, {0, 32}, {-32, 32}},
+        .Disp3DCnt = GL_ANTIALIAS},
     // edge case within an edge case combined with an edge case
-    {{{-110, -12, 0}, {-110, 24, 0}, {0, 24, 0}, {-140, 0, 0}},
-        Opaque | POLY_CULL_NONE,
-        GL_ANTIALIAS,
-        0},
+        {.Vertices = {{-110, -12}, {-110, 24}, {0, 24}, {-140, 0}},
+        .Disp3DCnt = GL_ANTIALIAS},
 
 // Category: Clipping ========================================
+
+    //
+
 
   // Sub Cat: Horizontal Line Polygons and Clipping ---------
 
@@ -337,109 +221,60 @@ constexpr Dataset Dataset[] =
     // todo2: also need to test if this applies with z clipping as well... in theory it should...?
 
     // Horizontal line polygons always render 1-4,
-    {{{-32, 0, 0}, {0, 0, 0}, {48, 0, 0}, {32, 0, 0}},
-        Opaque | POLY_CULL_NONE,
-        0,
-        0},
+        {.Vertices = {{-32, 0}, {0, 0}, {48, 0}, {32, 0}}},
     // 1-2,
-    {{{-32, 0, 0}, {32, 0, 0}, {48, 0, 0}, {0, 0, 0}},
-        Opaque | POLY_CULL_NONE,
-        0,
-        0},
+        {.Vertices = {{-32, 0}, {32, 0}, {48, 0}, {0, 0}}},
     // or 2-4. 3 is never rendered
-    {{{0, 0, 0}, {-32, 0, 0}, {48, 0, 0}, {32, 0, 0}},
-        Opaque | POLY_CULL_NONE,
-        0,
-        0},
+        {.Vertices = {{0, 0}, {-32, 0}, {48, 0}, {32, 0}}},
     // Until the first vertex gets clipped.... (1-2)
-    {{{-128, 0, 0}, {-32, 0, 0}, {32, 0, 0}, {48, 0, 0}},
-        Opaque | POLY_CULL_NONE,
-        0,
-        0},
+        {.Vertices = {{-128, 0}, {-32, 0}, {32, 0}, {48, 0}}},
     // Then things start to get interesting... (2-3)
-    {{{-128, 0, 0}, {-128, 0, 0}, {32, 0, 0}, {48, 0, 0}},
-        Opaque | POLY_CULL_NONE,
-        0,
-        0},
+        {.Vertices = {{-128, 0}, {-128, 0}, {32, 0}, {48, 0}}},
     // 2-3
-    {{{-128, 0, 0}, {-128, 0, 0}, {32, 0, 0}, {48, 0, 0}},
-        Opaque | POLY_CULL_NONE,
-        0,
-        0},
+        {.Vertices = {{-128, 0}, {-128, 0}, {32, 0}, {48, 0}}},
     // 3-4
-    {{{-128, 0, 0}, {-128, 0, 0}, {-128, 0, 0}, {48, 0, 0}},
-        Opaque | POLY_CULL_NONE,
-        0,
-        0},
+        {.Vertices = {{-128, 0}, {-128, 0}, {-128, 0}, {48, 0}}},
     // 4th vertex being clipped might complicate things, might not, probably depends on implementation of clipping (1-2)
-    {{{-128, 0, 0}, {-32, 0, 0}, {32, 0, 0}, {-128, 0, 0}},
-        Opaque | POLY_CULL_NONE,
-        0,
-        0},
+        {.Vertices = {{-128, 0}, {-32, 0}, {32, 0}, {-128, 0}}},
     //  2-3
-    {{{-128, 0, 0}, {-128, 0, 0}, {32, 0, 0}, {-128, 0, 0}},
-        Opaque | POLY_CULL_NONE,
-        0,
-        0},
+        {.Vertices = {{-128, 0}, {-128, 0}, {32, 0}, {-128, 0}}},
         
 // Catgory: Misc =============================================
  
     // left side has precedence over right side
     // Just an innocent square c:
-    {{{-32, -32, 0}, {-32, 32, 0}, {32, 33, 0}, {32, -32, 0}},
-        Opaque | POLY_CULL_NONE,
-        0,
-        0},
+        {.Vertices = {{-32, -32}, {-32, 32}, {32, 33}, {32, -32}}},
     // Evil square
-    {{{-32, -32, 0}, {-32, 33, 0}, {32, 32, 0}, {32, -32, 0}},
-        Opaque | POLY_CULL_NONE,
-        0,
-        0},
+        {.Vertices = {{-32, -32}, {-32, 33}, {32, 32}, {32, -32}}},
     // pointer never goes backwards
-    {{{-30, -14, 0}, {20, 15, 0}, {52, 15, 0}, {-51, 10, 0}},
-        Opaque | POLY_CULL_NONE,
-        0,
-        0},
+        {.Vertices = {{-30, -14}, {20, 15}, {52, 15}, {-51, 10}}},
     //these slopes are identical, but render differently due to rounding.
-    {{{-64,0, 0}, {64, -41, 0}, {64, 41, 0}, {-512, 0, 0}},
-        Trans | POLY_CULL_NONE,
-        GL_BLEND,
-        0},
+        {.Vertices = {{-64, 0}, {64, -41}, {64, 41}, {-512, 0}},
+        .PolyAttr = Trans | POLY_CULL_NONE,
+        .Disp3DCnt = GL_BLEND},
 
   // Sub Cat: Second Vertex is Weird ------------------------
 
     // Second vertex behaves differently vs others for w/e reason.
 
     // should behave normally
-    {{{-32, -32, 0}, {-1, -1, 0}, {32, 32, 0}, {32, -31, 0}},
-        Wireframe | POLY_CULL_NONE,
-        0,
-        0},
+        {.Vertices = {{-32, -32}, {-1, -1}, {32, 32}, {32, -31}},
+        .PolyAttr = Wireframe | POLY_CULL_NONE},
     // should behave normally ...or not?
-    {{{-32, -32, 0}, {0, 0, 0}, {32, 32, 0}, {32, -31, 0}},
-        Wireframe | POLY_CULL_NONE,
-        0,
-        0},
+        {.Vertices = {{-32, -32}, {0, 0}, {32, 32}, {32, -31}},
+        .PolyAttr = Wireframe | POLY_CULL_NONE},
     // should glitch out, behaving as if it was swapped
-    {{{-32, -32, 0}, {1, -1, 0}, {32, 32, 0}, {32, -31, 0}},
-        Wireframe | POLY_CULL_NONE,
-        0,
-        0},
+        {.Vertices = {{-32, -32}, {1, -1}, {32, 32}, {32, -31}},
+        .PolyAttr = Wireframe | POLY_CULL_NONE},
     // however only the second vertex should cause this behavior
-    {{{1, -1, 0}, {32, 32, 0}, {32, -32, 0}, {-32, -31, 0}},
-        Wireframe | POLY_CULL_NONE,
-        0,
-        0},
+        {.Vertices = {{1, -1}, {32, 32}, {32, -32}, {-32, -31}},
+        .PolyAttr = Wireframe | POLY_CULL_NONE},
     // should also behave normally
-    {{{-32, -32, 0}, {-32, -32, 0}, {32, 32, 0}, {32, -31, 0}},
-        Wireframe | POLY_CULL_NONE,
-        0,
-        0},
+        {.Vertices = {{-32, -32}, {-32, -32}, {32, 32}, {32, -31}},
+        .PolyAttr = Wireframe | POLY_CULL_NONE},
     // not sure if this one would behave weirdly tbh? idk im just gonna throw it in for the heck of it. might get removed.
-    {{{-2, -1, 0}, {0, 0, 0}, {-2, -1, 0}, {2, 1, 0}},
-        Wireframe | POLY_CULL_NONE,
-        0,
-        0},
+        {.Vertices = {{-2, -1}, {0, 0}, {-2, -1}, {2, 1}},
+        .PolyAttr = Wireframe | POLY_CULL_NONE},
 };
 
 constexpr int NumEntries = sizeof(Dataset) / sizeof(Dataset[0]);
