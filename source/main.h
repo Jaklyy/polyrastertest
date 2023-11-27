@@ -194,6 +194,10 @@ constexpr Dataset Dataset[] =
 
 // Category: Anti-Aliasing ===================================
 
+  //Sub Cat: General Anti-Aliasing---------------------------
+
+    // Todo
+
   // Sub Cat: Swapped Vertical Edge Glitch ------------------
 
     // yeah they also messed this up, im guessing they invert the aa alpha for swapped polygons to make them work properly?
@@ -209,16 +213,31 @@ constexpr Dataset Dataset[] =
         {.Vertices = {{-110, -12}, {-110, 24}, {0, 24}, {-140, 0}},
         .Disp3DCnt = GL_ANTIALIAS},
 
+// Category: Edge Marking ====================================
+
+    // Todo
+
+// Category: Fog =============================================
+
+    // Todo
+
+// Category: Depth ===========================================
+
+    // Todo
+
 // Category: Clipping ========================================
 
-    //
+  // Sub Cat: Texture Interpolation in Clipping -------------
 
+    // todo
+
+  // Sub Cat: Coord Interpolation in Clipping ---------------
+
+    // todo
 
   // Sub Cat: Horizontal Line Polygons and Clipping ---------
 
-    // todo: interpolation also behaves wonkily here, implement a way to test for/showcase this?
-    // ...maybe wait until interpolation under clipping is better understood, though
-    // todo2: also need to test if this applies with z clipping as well... in theory it should...?
+    // todo: need to test if this applies with z clipping as well... in theory it should...?
 
     // Horizontal line polygons always render 1-4,
         {.Vertices = {{-32, 0}, {0, 0}, {48, 0}, {32, 0}}},
