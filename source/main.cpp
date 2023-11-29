@@ -157,16 +157,16 @@ void rewindData(const int iteration)
                 shift -=8;
             }
             if ((filebuffer & (1 << (31 - shift))) == 0) shift++;
-            else if (Dataset[i].ColorMode == 0)
+            else if (Tests[i].ColorMode == 0)
             {
-                if (!(Dataset[i].PolyAttr & Opaque)) shift += 33;
+                if (!(Tests[i].PolyAttr & Opaque)) shift += 33;
                 else shift += 17;
             }
             else
             {
                 shift++;
-                u8 bits = Dataset[i].ColorMode * 5;
-                for (int k = 0; k <= (!(Dataset[i].PolyAttr & Opaque)); k++)
+                u8 bits = Tests[i].ColorMode * 5;
+                for (int k = 0; k <= (!(Tests[i].PolyAttr & Opaque)); k++)
                 {
                     u8 start = getSpanPoint();
                     u8 end = getSpanPoint();
@@ -192,14 +192,27 @@ void rewindData(const int iteration)
 
 void drawPoly(const int iteration)
 {
-    glPushMatrix();
-    glMatrixMode(GL_MODELVIEW);
+    
+    glClearColor(0,0,0,31);
+    glClearPolyID(63);
+    glClearDepth(GL_MAX_DEPTH);
 
-    glPolyFmt(Dataset[iteration].PolyAttr);
-    glEnable(Dataset[iteration].Disp3DCnt);
+    for (int i = 0; i < 8; i++)
+        glSetOutlineColor(i, Tests[iteration].OutlineColors[i]);
+
+    GFX_VIEWPORT = Tests[iteration].Viewport;
+
+    glMatrixMode(GL_PROJECTION);
+    glLoadMatrix4x4(&Tests[iteration].Projection);
+
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
+
+    glPolyFmt(Tests[iteration].PolyAttr);
+    GFX_CONTROL = Tests[iteration].Disp3DCnt;
 
     int verts;
-    if (Dataset[iteration].Vertices[3][0] != -512)
+    if (Tests[iteration].Vertices[3][0] != -512)
     {
         verts = 4;
         glBegin(GL_QUAD);
@@ -212,19 +225,13 @@ void drawPoly(const int iteration)
 
     for (int i = 0; i < verts; i++)
     {
-        glColor3b(255, 255, 255);
-        glVertex3v16(Dataset[iteration].Vertices[i][0], Dataset[iteration].Vertices[i][1], Dataset[iteration].Vertices[i][2]);
+        GFX_COLOR = Tests[iteration].VertexColors[i];
+        glVertex3v16(Tests[iteration].Vertices[i][0], Tests[iteration].Vertices[i][1], Tests[iteration].Vertices[i][2]);
     }
-    glEnd();
-        
-	glPopMatrix(1);
-
 	glFlush(0);
 
     REG_DISPCAPCNT |= DCAP_ENABLE;
     while(REG_DISPCAPCNT & DCAP_ENABLE);
-
-    glDisable(Dataset[iteration].Disp3DCnt);
 }
 
 //========================================================================================
@@ -309,7 +316,7 @@ bool test(const bool wireframe, const u8 colormode)
                         }
                         u16 color = getColor(bits, mask);
 
-                        if ((currcolor & mask) != color) VRAM_A[offset] = (VRAM_A[offset] & ~0x7FFF) | ColorTextureER;
+                        if ((currcolor & mask) != color) VRAM_A[offset] = (VRAM_A[offset] & ~0x7FFF) | ColorWrongTex;
                         else VRAM_A[offset] = (VRAM_A[offset] & ~0x7FFF) | ColorMatch;
                     }
                     else VRAM_A[offset] = (VRAM_A[offset] & ~0x7FFF) | ColorMatch;
@@ -451,14 +458,11 @@ int main()
 
     glInit();
 
-    glClearColor(0,0,0,31);
+    /*glClearColor(0,0,0,31);
     glClearPolyID(63);
     glClearDepth(GL_MAX_DEPTH);
-
     glSetOutlineColor(0, ColorStock);
-
     glViewport(0,0,255,191);
-
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
     glOrthof32(128, -127,
@@ -466,7 +470,7 @@ int main()
                0, GL_MAX_DEPTH);
     gluLookAt(0.0, 0.0, -1.0,
               0.0, 0.0,  0.0,
-              0.0, 1.0,  0.0);
+              0.0, 1.0,  0.0);*/
 
     int iteration = 0;
     u16 prevkeys;
@@ -559,7 +563,7 @@ int main()
                 showresults = (mode >= 2);
                 bool errorfound;
 
-                showresults |= errorfound = test(!(Dataset[iteration].PolyAttr & Opaque), Dataset[iteration].ColorMode);
+                showresults |= errorfound = test(!(Tests[iteration].PolyAttr & Opaque), Tests[iteration].ColorMode);
 
                 if (!TestCompletionTracker[iteration])
                 {
@@ -584,7 +588,7 @@ int main()
                 {
                     printf("Testing %i...\n\n", iteration+1);
                 }
-                printf("Green: Matching Pixel.\nRed: Missing Pixel.\nPink: Overdrawn Pixel.\n");
+                printf("Green: Matching Pixel.\nRed: Missing Pixel.\nPink: Overdrawn Pixel.\nBlue: Incorrect Color.\n");
                 
                 print->cursorY = 23;
                 printf("Ver. ");
@@ -599,7 +603,7 @@ int main()
                 printf("Ver. ");
                 printf(Version);
                 
-                record(dat, !(Dataset[iteration].PolyAttr & Opaque), Dataset[iteration].ColorMode);
+                record(dat, !(Tests[iteration].PolyAttr & Opaque), Tests[iteration].ColorMode);
                 iteration++;
             }
         }
