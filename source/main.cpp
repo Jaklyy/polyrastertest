@@ -65,7 +65,7 @@ u8 getSpanPoint()
 
 u16 getColor(const u8 bits, const u16 mask)
 {
-    u8 ret = ((filebuffer >> ((32-bits)-shift)) & mask);
+    u16 ret = ((filebuffer >> ((32-bits)-shift)) & mask);
     shift += bits;
     return ret;
 }
@@ -156,6 +156,69 @@ void rewindData(const int iteration)
                 filebuffer = readData(filebuffer, 1);
                 shift -=8;
             }
+            if (!(filebuffer & (1 << (31-shift)))) shift++;
+            else if (Tests[i].ColorMode == 0)
+            {
+                while (1)
+                {
+                    shift += 17;
+                    while (shift >= 8)
+                    {
+                        filebuffer = readData(filebuffer, 1);
+                        shift -=8;
+                    }
+                    if ((!(Tests[i].PolyAttr & Opaque)) || (Tests[i].ExtendedTestData > 0))
+                    {
+                        if (!(filebuffer & (1 << (31-shift))))
+                        {
+                            shift++;
+                            break;
+                        }
+                    }
+                    else
+                    break;
+                }
+            }
+            else
+            {
+                shift++;
+                while (1)
+                {
+                    while (shift >= 8)
+                    {
+                        filebuffer = readData(filebuffer, 1);
+                        shift -=8;
+                    }
+                    u8 bits = Tests[i].ColorMode * 5;
+                    u8 start = getSpanPoint();
+                    u8 end = getSpanPoint();
+                    for (; start <= end; start++)
+                    {
+                        shift += bits;
+                        while (shift >= 8)
+                        {
+                            filebuffer = readData(filebuffer, 1);
+                            shift -=8;
+                        }
+                    }
+                    if ((!(Tests[i].PolyAttr & Opaque)) || (Tests[i].ExtendedTestData > 0))
+                    {
+                        if (!(filebuffer & (1 << (31-shift))))
+                        {
+                            shift++;
+                            break;
+                        }
+                        else shift++;
+                    }
+                    else
+                    break;
+                }
+            }
+            /*while (shift >= 8)
+            {
+                filebuffer = readData(filebuffer, 1);
+                shift -=8;
+            }
             if ((filebuffer & (1 << (31 - shift))) == 0) shift++;
             else if (Tests[i].ColorMode == 0)
             {
@@ -181,7 +244,7 @@ void rewindData(const int iteration)
                         }
                     }
                 }
-            }
+            }*/
         }
     }
 }
@@ -194,8 +257,8 @@ void drawPoly(const int iteration)
 {
     
     glClearColor(0,0,0,31);
-    glClearPolyID(63);
-    glClearDepth(GL_MAX_DEPTH);
+    glClearPolyID(Tests[iteration].RearID);
+    glClearDepth(Tests[iteration].RearDepth);
 
     for (int i = 0; i < 8; i++)
         glSetOutlineColor(i, Tests[iteration].OutlineColors[i]);
@@ -211,6 +274,7 @@ void drawPoly(const int iteration)
     glPolyFmt(Tests[iteration].PolyAttr);
     GFX_CONTROL = Tests[iteration].Disp3DCnt;
 
+    
     int verts;
     if (Tests[iteration].Vertices[3][0] != -512)
     {
@@ -228,6 +292,33 @@ void drawPoly(const int iteration)
         GFX_COLOR = Tests[iteration].VertexColors[i];
         glVertex3v16(Tests[iteration].Vertices[i][0], Tests[iteration].Vertices[i][1], Tests[iteration].Vertices[i][2]);
     }
+
+    if (Tests[iteration].ExtendedTestData != 0)
+    {
+        int lookup = Tests[iteration].ExtendedTestData - 1;
+
+        for (u32 poly = 0; poly < ExtendedTests[lookup].NumPolygons; poly++)
+        {
+            int verts;
+            if (ExtendedTests[lookup].Polygons[poly].Vertices[3][0] != -512)
+            {
+                verts = 4;
+                glBegin(GL_QUAD);
+            }
+            else
+            {
+                verts = 3;
+                glBegin(GL_TRIANGLE);
+            }
+
+            for (int i = 0; i < verts; i++)
+            {
+                GFX_COLOR = ExtendedTests[lookup].Polygons[poly].VertexColors[i];
+                glVertex3v16(ExtendedTests[lookup].Polygons[poly].Vertices[i][0], ExtendedTests[lookup].Polygons[poly].Vertices[i][1], ExtendedTests[lookup].Polygons[poly].Vertices[i][2]);
+            }
+        }
+    }
+
 	glFlush(0);
 
     REG_DISPCAPCNT |= DCAP_ENABLE;
@@ -238,7 +329,7 @@ void drawPoly(const int iteration)
 //=TESTING================================================================================
 //========================================================================================
 
-bool test(const bool wireframe, const u8 colormode)
+bool test(const bool multispan, const u8 colormode)
 {
     u16 mask;
     u8 bits;
@@ -278,16 +369,24 @@ bool test(const bool wireframe, const u8 colormode)
             bool done = false;
             for (int x = 0; x < 256; x++)
             {
-                if (wireframe && x > endspan && !done)
+                if (multispan && x > endspan && !done)
                 {
-                    for (int i = 0; i < 2; i++)
+                    while (17+shift > 32)
                     {
                         filebuffer = readData(filebuffer, 1);
-                        shift -=8;
+                        shift -= 8;
                     }
-                    startspan = getSpanPoint();
-                    endspan = getSpanPoint();
-                    done = true;
+                    if (filebuffer & (1 << (31-shift)))
+                    {
+                        shift++;
+                        startspan = getSpanPoint();
+                        endspan = getSpanPoint();
+                    }
+                    else
+                    {
+                        shift++;
+                        done = true;
+                    }
                 }
 
                 u16 offset = y * 256 + x;
@@ -316,7 +415,11 @@ bool test(const bool wireframe, const u8 colormode)
                         }
                         u16 color = getColor(bits, mask);
 
-                        if ((currcolor & mask) != color) VRAM_A[offset] = (VRAM_A[offset] & ~0x7FFF) | ColorWrongTex;
+                        if ((currcolor & mask) != color)
+                        {
+                            VRAM_A[offset] = (VRAM_A[offset] & ~0x7FFF) | ColorWrongTex;
+                            errorfound = true;
+                        }
                         else VRAM_A[offset] = (VRAM_A[offset] & ~0x7FFF) | ColorMatch;
                     }
                     else VRAM_A[offset] = (VRAM_A[offset] & ~0x7FFF) | ColorMatch;
@@ -347,7 +450,7 @@ bool test(const bool wireframe, const u8 colormode)
 //=RECORDING==============================================================================
 //========================================================================================
 
-void record(FILE* dat, const bool wireframe, const u8 colormode)
+void record(FILE* dat, const bool multispan, const u8 colormode)
 {
     u16 mask;
     u8 bits;
@@ -375,7 +478,6 @@ void record(FILE* dat, const bool wireframe, const u8 colormode)
         s16 start;
         s16 end;
         int x = 0;
-        bool nospan = false;
         for (int i = 0;; i++)
         {
             if (i != 0)
@@ -383,13 +485,9 @@ void record(FILE* dat, const bool wireframe, const u8 colormode)
                 writeFile(dat);
                 if (start == -1)
                 {
-                    if (i == 1)
-                    {
-                        nospan = true;
-                        filebuffer = writeBuffer(filebuffer, 0, 1);
-                    }
-                    else if (nospan == false) filebuffer = writeBuffer(filebuffer, 0, 16);
+                    filebuffer = writeBuffer(filebuffer, 0, 1);
                     writeFile(dat);
+                    break;
                 }
                 else
                 {
@@ -410,7 +508,7 @@ void record(FILE* dat, const bool wireframe, const u8 colormode)
                 }
             }
 
-            if (i > wireframe) break; // only loop once if wireframe is not enabled, loop twice if it is.
+            if (!multispan && i == 1) break; // only do loop once if not multispan
 
             start = -1;
             end = -1;
@@ -432,7 +530,7 @@ void record(FILE* dat, const bool wireframe, const u8 colormode)
                 {
                     if (prevpixel == 0)
                     {
-                        if (i == 0) filebuffer = writeBuffer(filebuffer, 1, 1);
+                        filebuffer = writeBuffer(filebuffer, 1, 1);
 
                         start = x;
                         filebuffer = writeBuffer(filebuffer, x, 8);
@@ -563,7 +661,7 @@ int main()
                 showresults = (mode >= 2);
                 bool errorfound;
 
-                showresults |= errorfound = test(!(Tests[iteration].PolyAttr & Opaque), Tests[iteration].ColorMode);
+                showresults |= errorfound = test((!(Tests[iteration].PolyAttr & Opaque) || (Tests[iteration].ExtendedTestData > 0)), Tests[iteration].ColorMode);
 
                 if (!TestCompletionTracker[iteration])
                 {
@@ -581,7 +679,7 @@ int main()
                 printf("Tests Passed: %i/%i\n\n", numpass, numcomplete);
                 if (mode != 0)
                 {
-                    printf("Press A to view next test\nPress B to view previous test\nPress Start to close.\n\n");
+                    printf("Press A to view next test.\nPress B to view previous test.\nPress X to skim forward.\nPress Y to skim backward.\nPress Start to close.\n\n");
                     printf("Viewing Test %i...\n\n", iteration+1);
                 }
                 else
@@ -603,20 +701,20 @@ int main()
                 printf("Ver. ");
                 printf(Version);
                 
-                record(dat, !(Tests[iteration].PolyAttr & Opaque), Tests[iteration].ColorMode);
+                record(dat, (!(Tests[iteration].PolyAttr & Opaque) || (Tests[iteration].ExtendedTestData > 0)), Tests[iteration].ColorMode);
                 iteration++;
             }
         }
         else // if showing results
         {
-            if (keys & KEY_A && !(prevkeys & KEY_A))
+            if ((keys & KEY_A && !(prevkeys & KEY_A)) || keys & KEY_X)
             {
                 showresults = false;
                 videoSetMode(MODE_0_3D);
                 iteration++;
             }
 
-            if ((mode >= 2) && ((keys & KEY_B) && !(prevkeys & KEY_B)))
+            if ((mode >= 2) && (((keys & KEY_B) && !(prevkeys & KEY_B)) || keys & KEY_Y))
             {
                 showresults = false;
                 videoSetMode(MODE_0_3D);

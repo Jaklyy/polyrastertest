@@ -13,6 +13,10 @@ constexpr u32 Trans(u8 Opacity)
 {
     return Opacity << 16;
 }
+constexpr u32 PolyID(u8 ID)
+{
+    return ID << 24;
+}
 
 // Disp3DCnt
 //ph
@@ -32,25 +36,31 @@ struct TestData
 {
     s16 Vertices[NumVerts][NumAxis]; // Coordinates of each vertex x,y,z
     u32 PolyAttr = Opaque | POLY_CULL_NONE; // Polygons attributes for each test
+    u16 VertexColors[4] = {ColorStock, ColorStock, ColorStock, ColorStock}; // colors for each vertex
     u32 Disp3DCnt = 0; // 3D Display Control Register bits to enable for each test
-    u8 ColorMode = 0; // How many colors to read/record from/to the data file: 0-3 = none, r, rg, rgb
     u32 Viewport = (0<<0) + (0<<8) + (255<<16) + (191<<24); // Viewport to use
     m4x4 Projection = {131586, 0, 0, 0, // Matrix to use for projection
                        0, -175677, 0, 0,
                        0, 0, -1024, 0,
                        16, 21, -4096, 4096};
-    u16 VertexColors[4] = {ColorStock, ColorStock, ColorStock, ColorStock}; // colors for each vertex
     u16 OutlineColors[8] = {ColorStock}; // specify colors for edgemarking, 0 defaults to white, and 1-7 black
+    u8 RearID = 63;
+    u16 RearDepth = GL_MAX_DEPTH;
+    u8 ColorMode = 0; // How many colors to read/record from/to the data file: 0-3 = none, r, rg, rgb
     u16 ExtendedTestData = 0; // Determines which and whether to use an extended test mode. 0 = none, if greater use the value - 1 to determine which exttestdata to use.
+};
+
+struct Polygon
+{
+    s16 Vertices[NumVerts][NumAxis];
+    u32 PolyAttr = Opaque | POLY_CULL_NONE;
+    u16 VertexColors[4] = {ColorStock, ColorStock, ColorStock, ColorStock};
 };
 
 struct ExtTestData
 {
-    struct Polygon
-    {
-        s16 Vertices[NumVerts][NumAxis];
-        u32 PolyAttr = Opaque | POLY_CULL_NONE;
-    };
+    u32 NumPolygons = 1;
+    Polygon Polygons[1];
 };
 
 constexpr TestData Tests[] =
@@ -106,11 +116,11 @@ constexpr TestData Tests[] =
     
     // There are a few things that can force a polygon to fill all edges.
 
-    // Trans(30)parency + Blend - Fill
+    // Transparency + Blend - Fill
         {.Vertices = {{-32, -32}, {32, -32}, {32, 16}, {-512}},
         .PolyAttr = Trans(30) | POLY_CULL_NONE,
         .Disp3DCnt = GL_BLEND},
-    // Trans(30)parency + NO BLEND - no fill
+    // Transparency + NO BLEND - no fill
         {.Vertices = {{-32, -32}, {32, -32}, {32, 16}, {-512}},
         .PolyAttr = Trans(30) | POLY_CULL_NONE},
     // Wireframe - Fill
@@ -169,6 +179,40 @@ constexpr TestData Tests[] =
         {.Vertices = {{0, 10}, {0, 10}, {50, -10}, {-50, -10}}},
     // even when their y coord is different
         {.Vertices = {{0, 5}, {0, 10}, {50, -10}, {-50, -10}}},
+
+  // Sub Cat: The Curse of Edge Marking ---------------------
+
+    // Edge Marking + overlapping edges? - I-- what?
+        {.Vertices = {{-32, -32}, {32, -32}, {32, 16}, {-512}},
+        .Disp3DCnt = GL_OUTLINE,
+        .OutlineColors = {0b000001111100000},
+        .ColorMode = 2,
+        .ExtendedTestData = 1},
+    // Uhhh ok does it still happen with different poly IDs? - Yes.
+        {.Vertices = {{-32, -32}, {32, -32}, {32, 16}, {-512}},
+        .PolyAttr = Opaque | POLY_CULL_NONE | PolyID(1),
+        .Disp3DCnt = GL_OUTLINE,
+        .OutlineColors = {0b000001111100000},
+        .ColorMode = 2,
+        .ExtendedTestData = 1},
+    // oook, what if the fill rules are swapped? - 
+        {.Vertices = {{-32, 32}, {32, 32}, {32, -16}, {-512}},
+        .Disp3DCnt = GL_OUTLINE,
+        .OutlineColors = {0b000001111100000},
+        .ColorMode = 2,
+        .ExtendedTestData = 2},
+    // what if they're both supposed to fill? - 
+        {.Vertices = {{-32, 32}, {32, 32}, {32, -16}, {-512}},
+        .Disp3DCnt = GL_OUTLINE,
+        .OutlineColors = {0b000001111100000},
+        .ColorMode = 2,
+        .ExtendedTestData = 3},
+    // what about neither? - 
+        {.Vertices = {{-32, -32}, {32, -32}, {32, 16}, {-512}},
+        .Disp3DCnt = GL_OUTLINE,
+        .OutlineColors = {0b000001111100000},
+        .ColorMode = 2,
+        .ExtendedTestData = 4},
 
 // Category: Vertical Right Edge Shift =======================
 
@@ -235,7 +279,11 @@ constexpr TestData Tests[] =
 
 // Category: Edge Marking ====================================
 
-    // Todo
+    // Basic Square
+        {.Vertices = {{-32, -32}, {32, -32}, {32, 32}, {-32, 32}},
+        .Disp3DCnt = GL_OUTLINE,
+        .OutlineColors = {0b000000000011111},
+        .ColorMode = 2},
 
 // Category: Fog =============================================
 
@@ -316,7 +364,25 @@ constexpr TestData Tests[] =
         .PolyAttr = Wireframe | POLY_CULL_NONE},
 };
 
-
-
+constexpr ExtTestData ExtendedTests[] =
+{
+    // ext 1
+        {.NumPolygons = 1,
+        .Polygons = {{.Vertices = {{-32, -30, -16}, {-32, -32, -16}, {32, 16, -16}, {32, 18, -16}},
+        .PolyAttr = Opaque | POLY_CULL_NONE | PolyID(2),
+        .VertexColors{ColorMissing, ColorMissing, ColorMissing, ColorMissing}}}},
+    // ext 2
+        {.NumPolygons = 1,
+        .Polygons = {{.Vertices = {{-32, 30, -16}, {-32, 32, -16}, {32, -16, -16}, {32, -18, -16}},
+        .VertexColors{ColorMissing, ColorMissing, ColorMissing, ColorMissing}}}},
+    // ext 3
+        {.NumPolygons = 1,
+        .Polygons = {{.Vertices = {{32, 30, -16}, {32, 32, -16}, {-32, -16, -16}, {-32, -18, -16}},
+        .VertexColors{ColorMissing, ColorMissing, ColorMissing, ColorMissing}}}},
+    // ext 4
+        {.NumPolygons = 1,
+        .Polygons = {{.Vertices = {{-32, -30, -16}, {-32, -32, -16}, {32, 32, -16}, {32, 34, -16}},
+        .VertexColors{ColorMissing, ColorMissing, ColorMissing, ColorMissing}}}},
+};
 
 constexpr int NumEntries = sizeof(Tests) / sizeof(Tests[0]);
