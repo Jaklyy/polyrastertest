@@ -189,7 +189,7 @@ constexpr TestData Tests[] =
         .OutlineColors = {0b000001111100000},
         .ColorMode = 2,
         .ExtendedTestData = 1},
-    // Mirrored horizontally? - 
+    // Mirrored horizontally? - Yes
         {.Vertices = {{32, -32}, {-32, -32}, {-32, 16}, {-512}},
         .Disp3DCnt = GL_OUTLINE,
         .OutlineColors = {0b000001111100000},

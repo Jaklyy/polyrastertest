@@ -397,6 +397,15 @@ bool test(const bool multispan, const u8 colormode)
                     {
                         VRAM_A[offset] = (VRAM_A[offset] & ~0x7FFF) | ColorMissing;
                         errorfound = true;
+                        if (colormode != 0)
+                        {
+                            while (bits+shift > 32)
+                            {
+                                filebuffer = readData(filebuffer, 1);
+                                shift -= 8;
+                            }
+                            getColor(bits, mask);
+                        }
                     }
                 }
                 else if (x < startspan || x > endspan)
