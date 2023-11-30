@@ -4,7 +4,7 @@
 // Misc
 constexpr u8 NumVerts = 4;
 constexpr u8 NumAxis = 3;
-constexpr char Version[] = "1.0.2";
+constexpr char Version[] = "1.0.2-b";
 
 // Poly Attributes
 constexpr u32 Opaque = (31 << 16);

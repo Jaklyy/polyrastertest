@@ -1,5 +1,5 @@
-=======================================================
-Welcome to the Jakly Polygon Rasterization Suite v1.0.2
+=========================================================
+Welcome to the Jakly Polygon Rasterization Suite v1.0.2-b
 Or uh, polyrastertest as I like to call it.
 ...Just call it polyrastertest.
 
