@@ -661,7 +661,7 @@ int main()
                 showresults = (mode >= 2);
                 bool errorfound;
 
-                showresults |= errorfound = test((!(Tests[iteration].PolyAttr & Opaque) || (Tests[iteration].ExtendedTestData > 0)), Tests[iteration].ColorMode);
+                showresults |= errorfound = test(((!(Tests[iteration].PolyAttr & Opaque)) || (Tests[iteration].ExtendedTestData > 0)), Tests[iteration].ColorMode);
 
                 if (!TestCompletionTracker[iteration])
                 {
@@ -701,7 +701,7 @@ int main()
                 printf("Ver. ");
                 printf(Version);
                 
-                record(dat, (!(Tests[iteration].PolyAttr & Opaque) || (Tests[iteration].ExtendedTestData > 0)), Tests[iteration].ColorMode);
+                record(dat, ((!(Tests[iteration].PolyAttr & Opaque)) || (Tests[iteration].ExtendedTestData > 0)), Tests[iteration].ColorMode);
                 iteration++;
             }
         }

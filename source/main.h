@@ -4,7 +4,7 @@
 // Misc
 constexpr u8 NumVerts = 4;
 constexpr u8 NumAxis = 3;
-constexpr char Version[] = "1.0.1";
+constexpr char Version[] = "1.0.2";
 
 // Poly Attributes
 constexpr u32 Opaque = (31 << 16);
@@ -30,7 +30,7 @@ constexpr u16 ColorWrongTex = 0b111110000000000; // blue
 constexpr u16 ColorVoid     = 0b000000000000000; // black
 
 // only increment if the actual tests change, (only do on releases?)
-constexpr u16 DataVersion = 1;
+constexpr u16 DataVersion = 2;
 
 struct TestData
 {
@@ -182,37 +182,49 @@ constexpr TestData Tests[] =
 
   // Sub Cat: The Curse of Edge Marking ---------------------
 
-    // Edge Marking + overlapping edges? - I-- what?
-        {.Vertices = {{-32, -32}, {32, -32}, {32, 16}, {-512}},
-        .Disp3DCnt = GL_OUTLINE,
-        .OutlineColors = {0b000001111100000},
-        .ColorMode = 2,
-        .ExtendedTestData = 1},
-    // Uhhh ok does it still happen with different poly IDs? - Yes.
+    // Edge Marking + overlapping edges - I-- what?
         {.Vertices = {{-32, -32}, {32, -32}, {32, 16}, {-512}},
         .PolyAttr = Opaque | POLY_CULL_NONE | PolyID(1),
         .Disp3DCnt = GL_OUTLINE,
         .OutlineColors = {0b000001111100000},
         .ColorMode = 2,
         .ExtendedTestData = 1},
-    // oook, what if the fill rules are swapped? - 
+    // Mirrored horizontally? - 
+        {.Vertices = {{32, -32}, {-32, -32}, {-32, 16}, {-512}},
+        .Disp3DCnt = GL_OUTLINE,
+        .OutlineColors = {0b000001111100000},
+        .ColorMode = 2,
+        .ExtendedTestData = 5},
+    // oook, what if the fill rules are swapped? - No
         {.Vertices = {{-32, 32}, {32, 32}, {32, -16}, {-512}},
         .Disp3DCnt = GL_OUTLINE,
         .OutlineColors = {0b000001111100000},
         .ColorMode = 2,
         .ExtendedTestData = 2},
-    // what if they're both supposed to fill? - 
+    // what if they're both supposed to fill? - No
         {.Vertices = {{-32, 32}, {32, 32}, {32, -16}, {-512}},
         .Disp3DCnt = GL_OUTLINE,
         .OutlineColors = {0b000001111100000},
         .ColorMode = 2,
         .ExtendedTestData = 3},
-    // what about neither? - 
+    // what about neither? - No
         {.Vertices = {{-32, -32}, {32, -32}, {32, 16}, {-512}},
         .Disp3DCnt = GL_OUTLINE,
         .OutlineColors = {0b000001111100000},
         .ColorMode = 2,
         .ExtendedTestData = 4},
+    // Bottom? - Yes
+        {.Vertices = {{-32, -32}, {32, -32}, {32, -64}, {-32, -64}},
+        .Disp3DCnt = GL_OUTLINE,
+        .OutlineColors = {0b000001111100000},
+        .ColorMode = 2,
+        .ExtendedTestData = 6},
+    // Top? - No...?
+        {.Vertices = {{-32, 32}, {32, 32}, {32, 64}, {-32, 64}},
+        .Disp3DCnt = GL_OUTLINE,
+        .OutlineColors = {0b000001111100000},
+        .ColorMode = 2,
+        .ExtendedTestData = 6},
 
 // Category: Vertical Right Edge Shift =======================
 
@@ -281,6 +293,11 @@ constexpr TestData Tests[] =
 
     // Basic Square
         {.Vertices = {{-32, -32}, {32, -32}, {32, 32}, {-32, 32}},
+        .Disp3DCnt = GL_OUTLINE,
+        .OutlineColors = {0b000000000011111},
+        .ColorMode = 2},
+    // Basic Triangle
+        {.Vertices = {{-32, -32}, {32, -32}, {0, 16}, {-512}},
         .Disp3DCnt = GL_OUTLINE,
         .OutlineColors = {0b000000000011111},
         .ColorMode = 2},
@@ -381,7 +398,19 @@ constexpr ExtTestData ExtendedTests[] =
         .VertexColors{ColorMissing, ColorMissing, ColorMissing, ColorMissing}}}},
     // ext 4
         {.NumPolygons = 1,
-        .Polygons = {{.Vertices = {{-32, -30, -16}, {-32, -32, -16}, {32, 32, -16}, {32, 34, -16}},
+        .Polygons = {{.Vertices = {{-31, -30, -16}, {-31, -32, -16}, {33, 32, -16}, {33, 34, -16}},
+        .VertexColors{ColorMissing, ColorMissing, ColorMissing, ColorMissing}}}},
+    // ext 5
+        {.NumPolygons = 1,
+        .Polygons = {{.Vertices = {{32, -30, -16}, {32, -32, -16}, {-32, 16, -16}, {-32, 18, -16}},
+        .VertexColors{ColorMissing, ColorMissing, ColorMissing, ColorMissing}}}},
+    // ext 6
+        {.NumPolygons = 1,
+        .Polygons = {{.Vertices = {{-32, -34, -16}, {32, -32, -16}, {32, 32, -16}, {-32, 34, -16}},
+        .VertexColors{ColorMissing, ColorMissing, ColorMissing, ColorMissing}}}},
+    // ext 7
+        {.NumPolygons = 1,
+        .Polygons = {{.Vertices = {{-32, -32, -16}, {32, -32, -16}, {32, 32, -16}, {-32, 32, -16}},
         .VertexColors{ColorMissing, ColorMissing, ColorMissing, ColorMissing}}}},
 };
 
