@@ -214,37 +214,6 @@ void rewindData(const int iteration)
                     break;
                 }
             }
-            /*while (shift >= 8)
-            {
-                filebuffer = readData(filebuffer, 1);
-                shift -=8;
-            }
-            if ((filebuffer & (1 << (31 - shift))) == 0) shift++;
-            else if (Tests[i].ColorMode == 0)
-            {
-                if (!(Tests[i].PolyAttr & Opaque)) shift += 33;
-                else shift += 17;
-            }
-            else
-            {
-                shift++;
-                u8 bits = Tests[i].ColorMode * 5;
-                for (int k = 0; k <= (!(Tests[i].PolyAttr & Opaque)); k++)
-                {
-                    u8 start = getSpanPoint();
-                    u8 end = getSpanPoint();
-                    if (k == 1 && start == 0) break;
-                    for (; start <= end; start++)
-                    {
-                        shift += bits;
-                        while (shift >= 8)
-                        {
-                            filebuffer = readData(filebuffer, 1);
-                            shift -=8;
-                        }
-                    }
-                }
-            }*/
         }
     }
 }
@@ -299,6 +268,7 @@ void drawPoly(const int iteration)
 
         for (u32 poly = 0; poly < ExtendedTests[lookup].NumPolygons; poly++)
         {
+            glPolyFmt(ExtendedTests[lookup].Polygons[poly].PolyAttr);
             int verts;
             if (ExtendedTests[lookup].Polygons[poly].Vertices[3][0] != -512)
             {
@@ -404,14 +374,18 @@ bool test(const bool multispan, const u8 colormode)
                                 filebuffer = readData(filebuffer, 1);
                                 shift -= 8;
                             }
-                            getColor(bits, mask);
+                            u16 color = getColor(bits, mask);
+                            VRAM_B[offset] = color;
                         }
+                        else VRAM_B[offset] = White;
                     }
+                    else VRAM_B[offset] = Black;
                 }
                 else if (x < startspan || x > endspan)
                 {
                     VRAM_A[offset] = (VRAM_A[offset] & ~0x7FFF) | ColorOverdraw;
                     errorfound = true;
+                    VRAM_B[offset] = Black;
                 }
                 else
                 {
@@ -423,6 +397,7 @@ bool test(const bool multispan, const u8 colormode)
                             shift -= 8;
                         }
                         u16 color = getColor(bits, mask);
+                        VRAM_B[offset] = color;
 
                         if ((currcolor & mask) != color)
                         {
@@ -431,7 +406,11 @@ bool test(const bool multispan, const u8 colormode)
                         }
                         else VRAM_A[offset] = (VRAM_A[offset] & ~0x7FFF) | ColorMatch;
                     }
-                    else VRAM_A[offset] = (VRAM_A[offset] & ~0x7FFF) | ColorMatch;
+                    else
+                    {
+                        VRAM_A[offset] = (VRAM_A[offset] & ~0x7FFF) | ColorMatch;
+                        VRAM_B[offset] = White;
+                    }
                 }
             }
         }
@@ -448,6 +427,7 @@ bool test(const bool multispan, const u8 colormode)
                     VRAM_A[offset] = (VRAM_A[offset] & ~0x7FFF) | ColorOverdraw;
                     errorfound = true;               
                 }
+                VRAM_B[offset] = Black;
             }
         }
     }
@@ -565,20 +545,6 @@ int main()
 
     glInit();
 
-    /*glClearColor(0,0,0,31);
-    glClearPolyID(63);
-    glClearDepth(GL_MAX_DEPTH);
-    glSetOutlineColor(0, ColorStock);
-    glViewport(0,0,255,191);
-    glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
-    glOrthof32(128, -127,
-               96, -95,
-               0, GL_MAX_DEPTH);
-    gluLookAt(0.0, 0.0, -1.0,
-              0.0, 0.0,  0.0,
-              0.0, 1.0,  0.0);*/
-
     int iteration = 0;
     u16 prevkeys;
     
@@ -604,6 +570,7 @@ int main()
     }
 
     vramSetBankA(VRAM_A_LCD);
+    vramSetBankB(VRAM_B_LCD);
     REG_DISPCAPCNT = DCAP_MODE(DCAP_MODE_A)
                     | DCAP_SRC_A(DCAP_SRC_A_3DONLY)
                     | DCAP_SIZE(DCAP_SIZE_256x192)
@@ -615,9 +582,11 @@ int main()
     for (int i = 0; i < NumEntries; i++)
         TestCompletionTracker[i] = 0;
 
-    bool showresults = 0;
+    bool showresults = false;
     int numcomplete = 0;
     int numpass = 0;
+    bool showreference = false;
+    bool showrender = false;
 
 //========================================================================================
 //=MAIN LOOP==============================================================================
@@ -721,6 +690,8 @@ int main()
                 showresults = false;
                 videoSetMode(MODE_0_3D);
                 iteration++;
+                showreference = false;
+                showrender = false;
             }
 
             if ((mode >= 2) && (((keys & KEY_B) && !(prevkeys & KEY_B)) || keys & KEY_Y))
@@ -731,6 +702,23 @@ int main()
                 if (iteration < 0)
                     iteration = 0;
                 rewindData(iteration);
+                showreference = false;
+                showrender = false;
+            }
+
+            if ((keys & KEY_L && !(prevkeys & KEY_L)))
+            {
+                showreference = !showreference;
+                showrender = false;
+                if (showreference) videoSetMode(MODE_FB1);
+                else videoSetMode(MODE_FB0);
+            }
+            if ((keys & KEY_R && !(prevkeys & KEY_R)))
+            {
+                showrender = !showrender;
+                showreference = false;
+                if (showrender) videoSetMode(MODE_0_3D);
+                else videoSetMode(MODE_FB0);
             }
         }
 
