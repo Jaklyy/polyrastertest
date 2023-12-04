@@ -266,7 +266,7 @@ void drawPoly(const int iteration)
     {
         int lookup = Tests[iteration].ExtendedTestData - 1;
 
-        for (u32 poly = 0; poly < ExtendedTests[lookup].NumPolygons; poly++)
+        for (u32 poly = 0, j = ExtendedTests[lookup].TimesPoly1; poly < ExtendedTests[lookup].NumPolygons; poly++)
         {
             glPolyFmt(ExtendedTests[lookup].Polygons[poly].PolyAttr);
             int verts;
@@ -285,6 +285,12 @@ void drawPoly(const int iteration)
             {
                 GFX_COLOR = ExtendedTests[lookup].Polygons[poly].VertexColors[i];
                 glVertex3v16(ExtendedTests[lookup].Polygons[poly].Vertices[i][0], ExtendedTests[lookup].Polygons[poly].Vertices[i][1], ExtendedTests[lookup].Polygons[poly].Vertices[i][2]);
+            }
+
+            if (j > 1)
+            {
+                poly--;
+                j--;
             }
         }
     }
@@ -337,7 +343,7 @@ bool test(const bool multispan, const u8 colormode)
             u8 startspan = getSpanPoint();
             u8 endspan = getSpanPoint();
             bool done = false;
-            for (int x = 0; x < 256; x++)
+            for (int x = 0;; x++)
             {
                 if (multispan && x > endspan && !done)
                 {
@@ -358,6 +364,8 @@ bool test(const bool multispan, const u8 colormode)
                         done = true;
                     }
                 }
+                
+                if (x >= 256) break;
 
                 u16 offset = y * 256 + x;
                 u16 currcolor = VRAM_A[offset] & 0x7FFF;

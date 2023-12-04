@@ -69,6 +69,7 @@ struct Polygon
 struct ExtTestData
 {
     u32 NumPolygons = 1;
+    u32 TimesPoly1 = 1;
     Polygon Polygons[2];
 };
 
@@ -230,121 +231,113 @@ constexpr TestData Tests[] =
         .ExtendedTestData = 5},
     // How about when over the Rear Plane? - no, but that makes sense
         {.Vertices = {{32, -32}, {-32, -32}, {-32, 32}, {-512}},
+        .PolyAttr =  Opaque | POLY_CULL_NONE | PolyID(63),
         .Disp3DCnt = GL_OUTLINE,
         .OutlineColors = {Green},
         .ColorMode = 3},
     // also applies to verticals babyy
         {.Vertices = {{-32, -32}, {-32, 32}, {0, 32}, {0, -32}},
-        .PolyAttr =  Opaque | POLY_CULL_NONE,
         .Disp3DCnt = GL_OUTLINE,
         .OutlineColors = {Green},
         .ColorMode = 3,
         .ExtendedTestData = 2},
     // bottom xmajor
         {.Vertices = {{-32, -32}, {-32, 0}, {32, -32}, {-512}},
-        .PolyAttr =  Opaque | POLY_CULL_NONE,
         .Disp3DCnt = GL_OUTLINE,
         .OutlineColors = {Green},
         .ColorMode = 3,
         .ExtendedTestData = 3},
     // bottom flat
         {.Vertices = {{-32, -32}, {-32, 0}, {32, 0}, {32, -32}},
-        .PolyAttr =  Opaque | POLY_CULL_NONE,
         .Disp3DCnt = GL_OUTLINE,
         .OutlineColors = {Green},
         .ColorMode = 3,
         .ExtendedTestData = 4},
     // note that it's specifically the center of the polygon, and not the slopes that this applies to in this case.
         {.Vertices = {{-32, -32}, {-28, 0}, {28, 0}, {32, -32}},
-        .PolyAttr =  Opaque | POLY_CULL_NONE,
         .Disp3DCnt = GL_OUTLINE,
         .OutlineColors = {Green},
         .ColorMode = 3,
         .ExtendedTestData = 4},
     // the rules dont seem to combine, though (weird phrasing i know)
         {.Vertices = {{-32, -32}, {-32, 32}, {0, 32}, {0, -32}},
-        .PolyAttr =  Opaque | POLY_CULL_NONE,
         .Disp3DCnt = GL_OUTLINE,
         .OutlineColors = {Green},
         .ColorMode = 3,
         .ExtendedTestData = 4},
     // Anyway now for some weird stuff:
         {.Vertices = {{-32, -2}, {-32, 0}, {32, 0}, {-512}},
-        .PolyAttr =  Opaque | POLY_CULL_NONE,
         .Disp3DCnt = GL_OUTLINE,
         .OutlineColors = {Green},
         .ColorMode = 3,
         .ExtendedTestData = 6},
     // 
         {.Vertices = {{-32, 2}, {-32, 0}, {32, 0}, {-512}},
-        .PolyAttr =  Opaque | POLY_CULL_NONE,
         .Disp3DCnt = GL_OUTLINE,
         .OutlineColors = {Green},
         .ColorMode = 3,
         .ExtendedTestData = 7},
     //
         {.Vertices = {{-32, -32}, {-32, 0}, {32, 0}, {32, -32}},
-        .PolyAttr =  Opaque | POLY_CULL_NONE,
         .Disp3DCnt = GL_OUTLINE,
         .OutlineColors = {Green},
         .ColorMode = 3,
         .ExtendedTestData = 8},
     //
         {.Vertices = {{-32, -32}, {-32, -2}, {32, 0}, {32, -32}},
-        .PolyAttr =  Opaque | POLY_CULL_NONE,
         .Disp3DCnt = GL_OUTLINE,
         .OutlineColors = {Green},
         .ColorMode = 3,
         .ExtendedTestData = 9},
     //
         {.Vertices = {{-2, -32}, {0, -32}, {0, 32}, {-512}},
-        .PolyAttr =  Opaque | POLY_CULL_NONE,
         .Disp3DCnt = GL_OUTLINE,
         .OutlineColors = {Green},
         .ColorMode = 3,
         .ExtendedTestData = 10},
     //
         {.Vertices = {{0, -32}, {2, -32}, {0, 32}, {-512}},
-        .PolyAttr =  Opaque | POLY_CULL_NONE,
         .Disp3DCnt = GL_OUTLINE,
         .OutlineColors = {Green},
         .ColorMode = 3,
         .ExtendedTestData = 11},
     //
         {.Vertices = {{-32, -32}, {0, -32}, {0, 32}, {-32, 32}},
-        .PolyAttr =  Opaque | POLY_CULL_NONE,
         .Disp3DCnt = GL_OUTLINE,
         .OutlineColors = {Green},
         .ColorMode = 3,
         .ExtendedTestData = 12},
     //
         {.Vertices = {{-32, -32}, {2, -32}, {0, 32}, {-32, 32}},
-        .PolyAttr =  Opaque | POLY_CULL_NONE,
         .Disp3DCnt = GL_OUTLINE,
         .OutlineColors = {Green},
         .ColorMode = 3,
         .ExtendedTestData = 13},
     // does not apply if the edge becomes properly edge marked
         {.Vertices = {{-32, -32}, {32, -32}, {32, 0}, {-32, 0}},
-        .PolyAttr =  Opaque | POLY_CULL_NONE,
         .Disp3DCnt = GL_OUTLINE,
         .OutlineColors = {Green},
         .ColorMode = 3,
         .ExtendedTestData = 14},
     // line polygons (horizontal)
         {.Vertices = {{-32, -32}, {-32, 0}, {32, 0}, {32, -32}},
-        .PolyAttr =  Opaque | POLY_CULL_NONE,
         .Disp3DCnt = GL_OUTLINE,
         .OutlineColors = {Green},
         .ColorMode = 3,
         .ExtendedTestData = 15},
     // line poly (vert)
         {.Vertices = {{-32, -32}, {-32, 32}, {0, 32}, {0, -32}},
-        .PolyAttr =  Opaque | POLY_CULL_NONE,
         .Disp3DCnt = GL_OUTLINE,
         .OutlineColors = {Green},
         .ColorMode = 3,
         .ExtendedTestData = 16},
+    // more curse
+        {.Vertices = {{-32, -32}, {-32, 32}, {0, 32}, {0, -32}},
+        .Disp3DCnt = GL_OUTLINE,
+        .OutlineColors = {Green},
+        .ColorMode = 3,
+        .ExtendedTestData = 16},
+
         
 // Category: Vertical Right Edge Shift =======================
 
@@ -462,7 +455,28 @@ constexpr TestData Tests[] =
         {.Vertices = {{-128, 0}, {-32, 0}, {32, 0}, {-128, 0}}},
     //  2-3
         {.Vertices = {{-128, 0}, {-128, 0}, {32, 0}, {-128, 0}}},
-        
+
+// Category: Upper Limits =====================================
+
+  // Sub Cat: Scanline Pixel Limit(?)
+
+    // Seems like you can only render so many pixels in a scanline before the far plane peeks through?
+    // Not 100% sure what exactly is happening here.
+    // We're not even close to the polygon/vertex limit, so that's not it.
+
+    // Look at this
+        {.Vertices = {{-256, -256}, {-256, 256}, {256, 256}, {256, -256}},
+        .ExtendedTestData = 17},
+    // Why is there a line forming there, it does not care about size, just number of polygons
+        {.Vertices = {{-256, -256}, {-256, 256}, {256, 256}, {256, -256}},
+        .ExtendedTestData = 18},
+    // Parial Line, Mid Scanline
+        {.Vertices = {{-256, -256}, {-256, 256}, {256, 256}, {256, -256}},
+        .ExtendedTestData = 19},
+    // Here it is with a triangle
+        {.Vertices = {{97, -25}, {72, 25}, {122, 25}, {-512}},
+        .ExtendedTestData = 20},
+
 // Catgory: Misc =============================================
  
     // left side has precedence over right side
@@ -600,6 +614,26 @@ constexpr ExtTestData ExtendedTests[] =
             .VertexColors{Red, Red, Red, Red}},
             {.Vertices = {{34, -34, -32}, {34, 34, -32}, {-34, 34, -32}, {-34, -34, -32}},
             .VertexColors{Blue, Blue, Blue, Blue}}}},
+    //ext 17
+        {.NumPolygons = 1,
+        .TimesPoly1 = 94,
+        .Polygons = {{.Vertices = {{-80, -5}, {-80, 5}, {80, 5}, {80, -5}},
+            .VertexColors{Red, Red, Red, Red}}}},
+    //ext 18
+        {.NumPolygons = 1,
+        .TimesPoly1 = 501,
+        .Polygons = {{.Vertices = {{-80, -5}, {-80, 5}, {0, 5}, {0, -5}},
+            .VertexColors{Red, Red, Red, Red}}}},
+    //ext 19
+        {.NumPolygons = 1,
+        .TimesPoly1 = 448,
+        .Polygons = {{.Vertices = {{-124, -5}, {-124, 5}, {-100, 5}, {-100, -5}},
+            .VertexColors{Red, Red, Red, Red}}}},
+    //ext 20
+        {.NumPolygons = 1,
+        .TimesPoly1 = 2048,
+        .Polygons = {{.Vertices = {{-124, -5}, {-124, 5}, {-100, 5}, {-100, -5}},
+            .VertexColors{Red, Red, Red, Red}}}},
 };
 
 constexpr int NumEntries = sizeof(Tests) / sizeof(Tests[0]);
