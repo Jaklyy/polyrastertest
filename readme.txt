@@ -11,7 +11,8 @@ Hold Select to enable Manual Mode, where you must Press A to proceed through eac
 If not holding either of those buttons you will proceed through the testing automatically.
 
 In order to load new data into the test you have to replace the data in the /data/ folder and build the test manually.
-Which just means you have to set up devkitpro and type make into a terminal window idk.
+Which just means you have to follow these instructions https://github.com/blocksds/sdk/blob/master/readme.rst to set up a blocksds build environment.
+could likely also compile with devkitpro but you'll need to understand how to convert the makefile.
 If that's not clear enough then uh. idk. This is the first actually independently developed from scratch thing i've put out lol.
 
 
