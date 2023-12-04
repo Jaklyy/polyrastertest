@@ -4,6 +4,7 @@
 #include <filesystem.h>
 #include "rastertest_data.h"
 #include "main.h"
+#include "tests.h"
 
 
 
@@ -636,7 +637,8 @@ int main()
                 showresults = (mode >= 2);
                 bool errorfound;
 
-                showresults |= errorfound = test(((!(Tests[iteration].PolyAttr & Opaque)) || (Tests[iteration].ExtendedTestData > 0)), Tests[iteration].ColorMode);
+                errorfound = test(((!(Tests[iteration].PolyAttr & Opaque)) || (Tests[iteration].ExtendedTestData > 0)), Tests[iteration].ColorMode);
+                showresults |= errorfound;
 
                 if (!TestCompletionTracker[iteration])
                 {
@@ -649,16 +651,16 @@ int main()
                 else iteration++;
 
                 consoleClear();
-                if (mode == 3)
-                    printf("Testing complete!\n\n");
+                if (mode == 3) printf("Testing complete!\n\n");
                 printf("Tests Passed: %i/%i\n\n", numpass, numcomplete);
                 if (mode != 0)
                 {
-                    printf("Press A to view next test.\nPress B to view previous test.\nPress X to skim forward.\nPress Y to skim backward.\nPress Start to close.\n\n");
+                    printf("Press A to view next test.\nPress B to view previous test.\nPress X to skim forward.\nPress Y to skim backward.\nPress L to toggle hw data\nPress R to toggle rendered polys\nPress Start to close.\n\n");
                     printf("Viewing Test %i...\n\n", iteration+1);
                 }
                 else
                 {
+                    if (errorfound) printf("Press A to view next test.\nPress X to skim forward.\nPress L to toggle hw data\nPress R to toggle rendered polys\nPress Start to close.\n\n");
                     printf("Testing %i...\n\n", iteration+1);
                 }
                 printf("Green: Matching Pixel.\nRed: Missing Pixel.\nPink: Overdrawn Pixel.\nBlue: Incorrect Color.\n");
