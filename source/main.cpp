@@ -175,13 +175,13 @@ void rewindData(const int iteration)
                             break;
                         }
                     }
-                    else
-                    break;
+                    else break;
                 }
             }
             else
             {
                 shift++;
+                u8 bits = Tests[i].ColorMode * 5;
                 while (1)
                 {
                     while (shift >= 8)
@@ -189,8 +189,7 @@ void rewindData(const int iteration)
                         filebuffer = readData(filebuffer, 1);
                         shift -=8;
                     }
-                    u8 bits = Tests[i].ColorMode * 5;
-                    u8 start = getSpanPoint();
+                    u16 start = getSpanPoint();
                     u8 end = getSpanPoint();
                     for (; start <= end; start++)
                     {
@@ -210,8 +209,7 @@ void rewindData(const int iteration)
                         }
                         else shift++;
                     }
-                    else
-                    break;
+                    else break;
                 }
             }
         }
@@ -266,36 +264,33 @@ void drawPoly(const int iteration)
     {
         int lookup = Tests[iteration].ExtendedTestData - 1;
 
-        for (u32 poly = 0, j = ExtendedTests[lookup].TimesPoly1; poly < ExtendedTests[lookup].NumPolygons; poly++)
+        for (u16 poly = 0; poly < ExtendedTests[lookup].NumPolygons; poly++)
         {
-            glPolyFmt(ExtendedTests[lookup].Polygons[poly].PolyAttr);
-            int verts;
-            if (ExtendedTests[lookup].Polygons[poly].Vertices[3][0] != -512)
+            for (int j = ExtendedTests[lookup].Polygons[poly].Copies; j > 0; j--)
             {
-                verts = 4;
-                glBegin(GL_QUAD);
-            }
-            else
-            {
-                verts = 3;
-                glBegin(GL_TRIANGLE);
-            }
+                glPolyFmt(ExtendedTests[lookup].Polygons[poly].PolyAttr);
+                int verts;
+                if (ExtendedTests[lookup].Polygons[poly].Vertices[3][0] != -512)
+                {
+                    verts = 4;
+                    glBegin(GL_QUAD);
+                }
+                else
+                {
+                    verts = 3;
+                    glBegin(GL_TRIANGLE);
+                }
 
-            for (int i = 0; i < verts; i++)
-            {
-                GFX_COLOR = ExtendedTests[lookup].Polygons[poly].VertexColors[i];
-                glVertex3v16(ExtendedTests[lookup].Polygons[poly].Vertices[i][0], ExtendedTests[lookup].Polygons[poly].Vertices[i][1], ExtendedTests[lookup].Polygons[poly].Vertices[i][2]);
-            }
-
-            if (j > 1)
-            {
-                poly--;
-                j--;
+                for (int i = 0; i < verts; i++)
+                {
+                    GFX_COLOR = ExtendedTests[lookup].Polygons[poly].VertexColors[i];
+                    glVertex3v16(ExtendedTests[lookup].Polygons[poly].Vertices[i][0], ExtendedTests[lookup].Polygons[poly].Vertices[i][1], ExtendedTests[lookup].Polygons[poly].Vertices[i][2]);
+                }
             }
         }
     }
 
-	glFlush(0);
+	glFlush(Tests[iteration].Flush);
 
     REG_DISPCAPCNT |= DCAP_ENABLE;
     while(REG_DISPCAPCNT & DCAP_ENABLE);
@@ -336,6 +331,7 @@ bool test(const bool multispan, const u8 colormode)
             filebuffer = readData(filebuffer, 1);
             shift -=8;
         }
+
         if (filebuffer & (1 << (31-shift)))
         {
             // span present
@@ -343,6 +339,7 @@ bool test(const bool multispan, const u8 colormode)
             u8 startspan = getSpanPoint();
             u8 endspan = getSpanPoint();
             bool done = false;
+
             for (int x = 0;; x++)
             {
                 if (multispan && x > endspan && !done)
@@ -352,6 +349,7 @@ bool test(const bool multispan, const u8 colormode)
                         filebuffer = readData(filebuffer, 1);
                         shift -= 8;
                     }
+                    
                     if (filebuffer & (1 << (31-shift)))
                     {
                         shift++;
@@ -364,49 +362,44 @@ bool test(const bool multispan, const u8 colormode)
                         done = true;
                     }
                 }
-                
-                if (x >= 256) break;
 
+                if (x >= 256) break;
+                
                 u16 offset = y * 256 + x;
                 u16 currcolor = VRAM_A[offset] & 0x7FFF;
-                if (currcolor == ColorVoid)
+                if (x < startspan || x > endspan) // if outside the data's current span
                 {
-                    if (!(x < startspan || x > endspan))
-                    {
-                        VRAM_A[offset] = (VRAM_A[offset] & ~0x7FFF) | ColorMissing;
-                        errorfound = true;
-                        if (colormode != 0)
-                        {
-                            while (bits+shift > 32)
-                            {
-                                filebuffer = readData(filebuffer, 1);
-                                shift -= 8;
-                            }
-                            u16 color = getColor(bits, mask);
-                            VRAM_B[offset] = color;
-                        }
-                        else VRAM_B[offset] = White;
-                    }
-                    else VRAM_B[offset] = Black;
-                }
-                else if (x < startspan || x > endspan)
-                {
-                    VRAM_A[offset] = (VRAM_A[offset] & ~0x7FFF) | ColorOverdraw;
-                    errorfound = true;
                     VRAM_B[offset] = Black;
+                    if (currcolor != ColorVoid) 
+                    {
+                        VRAM_A[offset] = (VRAM_A[offset] & ~0x7FFF) | ColorOverdraw;
+                        errorfound = true;
+                    }
                 }
-                else
+                else // if inside the data's current span
                 {
-                    if (colormode != 0)
+                    // find color data, also set reference image.
+                    u16 color;
+                    if (colormode != 0) // if rendering colors
                     {
                         while (bits+shift > 32)
                         {
                             filebuffer = readData(filebuffer, 1);
                             shift -= 8;
                         }
-                        u16 color = getColor(bits, mask);
+                        color = getColor(bits, mask);
                         VRAM_B[offset] = color;
+                    }
+                    else VRAM_B[offset] = White;
 
+                    // test for color
+                    if (currcolor == ColorVoid)
+                    {
+                        VRAM_A[offset] = (VRAM_A[offset] & ~0x7FFF) | ColorMissing;
+                        errorfound = true;
+                    }
+                    else if (colormode != 0) // if rendering colors
+                    {
                         if ((currcolor & mask) != color)
                         {
                             VRAM_A[offset] = (VRAM_A[offset] & ~0x7FFF) | ColorWrongTex;
@@ -414,28 +407,23 @@ bool test(const bool multispan, const u8 colormode)
                         }
                         else VRAM_A[offset] = (VRAM_A[offset] & ~0x7FFF) | ColorMatch;
                     }
-                    else
-                    {
-                        VRAM_A[offset] = (VRAM_A[offset] & ~0x7FFF) | ColorMatch;
-                        VRAM_B[offset] = White;
-                    }
+                    else VRAM_A[offset] = (VRAM_A[offset] & ~0x7FFF) | ColorMatch;
                 }
             }
         }
-        else
+        else // no span
         {
-            // no span
             shift++;
             for (int x = 0; x < 256; x++)
             {
-                u16 offset = (y * 256) + x;
+                u16 offset = y * 256 + x;
                 u16 currcolor = VRAM_A[offset] & 0x7FFF;
-                if (currcolor != ColorVoid)
+                VRAM_B[offset] = Black;
+                if (currcolor != ColorVoid) 
                 {
                     VRAM_A[offset] = (VRAM_A[offset] & ~0x7FFF) | ColorOverdraw;
-                    errorfound = true;               
+                    errorfound = true;
                 }
-                VRAM_B[offset] = Black;
             }
         }
     }
@@ -490,10 +478,11 @@ void record(FILE* dat, const bool multispan, const u8 colormode)
                 {
                     if (end == -1)
                     {
-                        filebuffer = writeBuffer(filebuffer, 255, 8);
+                        end = 255;
+                        filebuffer = writeBuffer(filebuffer, end, 8);
                         writeFile(dat);
                     }
-
+                    
                     if (colormode != 0)
                     {
                         for (; start <= end; start++)
@@ -518,7 +507,7 @@ void record(FILE* dat, const bool multispan, const u8 colormode)
                     if (prevpixel != 0)
                     {
                         end = x-1;
-                        filebuffer = writeBuffer(filebuffer, x-1, 8);
+                        filebuffer = writeBuffer(filebuffer, end, 8);
                         x++;
                         break;
                     }
@@ -530,7 +519,7 @@ void record(FILE* dat, const bool multispan, const u8 colormode)
                         filebuffer = writeBuffer(filebuffer, 1, 1);
 
                         start = x;
-                        filebuffer = writeBuffer(filebuffer, x, 8);
+                        filebuffer = writeBuffer(filebuffer, start, 8);
                         prevpixel = 1;
                     }
 

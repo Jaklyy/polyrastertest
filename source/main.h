@@ -46,7 +46,8 @@ struct TestData
     s16 Vertices[NumVerts][NumAxis]; // Coordinates of each vertex x,y,z
     u32 PolyAttr = Opaque | POLY_CULL_NONE; // Polygons attributes for each test
     u16 VertexColors[4] = {White, White, White, White}; // colors for each vertex
-    u32 Disp3DCnt = 0; // 3D Display Control Register bits to enable for each test
+    u16 Disp3DCnt = 0; // 3D Display Control Register bits to enable for each test (reg is technically 32 bit but half of it is unused)
+    u8 Flush = 0;
     u32 Viewport = (0<<0) + (0<<8) + (255<<16) + (191<<24); // Viewport to use
     m4x4 Projection = {131586, 0, 0, 0, // Matrix to use for projection
                        0, -175677, 0, 0,
@@ -64,12 +65,12 @@ struct Polygon
     s16 Vertices[NumVerts][NumAxis];
     u32 PolyAttr = Opaque | POLY_CULL_NONE;
     u16 VertexColors[4] = {White, White, White, White};
+    u16 Copies = 1;
 };
 
 struct ExtTestData
 {
-    u32 NumPolygons = 1;
-    u32 TimesPoly1 = 1;
+    u16 NumPolygons = 1;
     Polygon Polygons[2];
 };
 
@@ -458,16 +459,15 @@ constexpr TestData Tests[] =
 
 // Category: Upper Limits =====================================
 
-  // Sub Cat: Scanline Pixel Limit(?)
+  // Sub Cat: Scanline Rasterization Timings
 
-    // Seems like you can only render so many pixels in a scanline before the far plane peeks through?
-    // Not 100% sure what exactly is happening here.
-    // We're not even close to the polygon/vertex limit, so that's not it.
+    // It appears that you can only render so much in one scanline before the rasterizer gives up on it.
+    // Good luck passing these, basically requires susing out rasterization timings.
 
     // Look at this
         {.Vertices = {{-256, -256}, {-256, 256}, {256, 256}, {256, -256}},
         .ExtendedTestData = 17},
-    // Why is there a line forming there, it does not care about size, just number of polygons
+    // Here we have the scanline *after* the polygon spam being partially aborted, doesn't seem to care about polygon size, just num of polys?
         {.Vertices = {{-256, -256}, {-256, 256}, {256, 256}, {256, -256}},
         .ExtendedTestData = 18},
     // Parial Line, Mid Scanline
@@ -476,6 +476,16 @@ constexpr TestData Tests[] =
     // Here it is with a triangle
         {.Vertices = {{97, -25}, {72, 25}, {122, 25}, {-512}},
         .ExtendedTestData = 20},
+    // Also it impacts edgemarking jank for some reason.
+        {.Vertices = {{-256, -256}, {-256, 256}, {256, 256}, {256, -256}},
+        .VertexColors = {Green, Green, Green, Green},
+        .Disp3DCnt = GL_OUTLINE,
+        .OutlineColors {Red},
+        .ColorMode = 2,
+        .ExtendedTestData = 21},
+    // What if we render the bg first?
+        {.Vertices = {{-256, -256, -1}, {-256, 4, -1}, {256, 4, -1}, {256, -256, -1}},
+        .ExtendedTestData = 17},
 
 // Catgory: Misc =============================================
  
@@ -616,24 +626,29 @@ constexpr ExtTestData ExtendedTests[] =
             .VertexColors{Blue, Blue, Blue, Blue}}}},
     //ext 17
         {.NumPolygons = 1,
-        .TimesPoly1 = 94,
         .Polygons = {{.Vertices = {{-80, -5}, {-80, 5}, {80, 5}, {80, -5}},
-            .VertexColors{Red, Red, Red, Red}}}},
+            .VertexColors{Yellow, Yellow, Yellow, Yellow},
+            .Copies = 94}}},
     //ext 18
         {.NumPolygons = 1,
-        .TimesPoly1 = 501,
         .Polygons = {{.Vertices = {{-80, -5}, {-80, 5}, {0, 5}, {0, -5}},
-            .VertexColors{Red, Red, Red, Red}}}},
+            .VertexColors{Yellow, Yellow, Yellow, Yellow},
+            .Copies = 501}}},
     //ext 19
         {.NumPolygons = 1,
-        .TimesPoly1 = 448,
         .Polygons = {{.Vertices = {{-124, -5}, {-124, 5}, {-100, 5}, {-100, -5}},
-            .VertexColors{Red, Red, Red, Red}}}},
+            .VertexColors{Yellow, Yellow, Yellow, Yellow},
+            .Copies = 448}}},
     //ext 20
         {.NumPolygons = 1,
-        .TimesPoly1 = 2048,
         .Polygons = {{.Vertices = {{-124, -5}, {-124, 5}, {-100, 5}, {-100, -5}},
-            .VertexColors{Red, Red, Red, Red}}}},
+            .VertexColors{Yellow, Yellow, Yellow, Yellow},
+            .Copies = 2048}}},
+    //ext 21
+        {.NumPolygons = 1,
+        .Polygons = {{.Vertices = {{-80, -90}, {-80, -80}, {80, -80}, {80, -90}},
+            .VertexColors{Yellow, Yellow, Yellow, Yellow},
+            .Copies = 94}}},
 };
 
 constexpr int NumEntries = sizeof(Tests) / sizeof(Tests[0]);
