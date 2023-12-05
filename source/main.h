@@ -120,17 +120,17 @@ struct Menu
 Menu Configure1 =
 {
     .NumEntries = 23, 
-    .Entries = {"-Niche Tests", " -Ultra Niche Tests", "-Fill Rules", " -Normal", " -Swapped", " -Overrides", " -Unusual", " -Line",
-    " -Swapped Vertical Left", " -Trapezoid", " -Edge Marking Fill Quirk", "-Vertical Right Shift", "-Anti-Aliasing", " -Swapped Vertical",
-    "-Edge Marking", "-Wireframe", "-Translucency", "-Clipping", " -Horizontal Lines", "-Upper Limits", " -Scanline Abort", "-Misc",
-    " -Second Vertex Bug"},
+    .Entries = {"-Niche Tests", " *Ultra Niche Tests", "-Fill Rules", " *Normal", " *Swapped", " *Overrides", " *Unusual", " *Line",
+    " *Swapped Vertical Left", " *Trapezoid", " *Edge Marking Fill Quirk", "-Vertical Right Shift", "-Anti-Aliasing", " *Swapped Vertical",
+    "-Edge Marking", "-Wireframe", "-Translucency", "-Clipping", " *Horizontal Lines", "-Upper Limits", " *Scanline Abort", "-Misc",
+    " *Second Vertex Bug"},
     .Inputs {256, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 26, 27, 18, 21, 22, 23, 24, 25},
     .Toggles = true
 };
 
 Menu MainMenu =
 {
-    .NumEntries = 3, 
+    .NumEntries = 4, 
     .Entries = {"Test", "Manual Test", "Record", "Configure"},
     .Inputs {261, 257, 258, 259, 260}
 };

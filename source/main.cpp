@@ -100,12 +100,13 @@ bool checkFilters(int iteration)
 //=MENU===================================================================================
 //========================================================================================
 
-bool menuSelect(u16 selection, Menu** menu, u8* mode)
+bool menuSelect(u16 selection, Menu** menu, u8* mode, u8* pointer)
 {
     switch (selection)
     {
     case 256:
         *menu = &MainMenu;
+        *pointer = 0;
         return false;
     case 257:
         *mode = 0;
@@ -118,6 +119,7 @@ bool menuSelect(u16 selection, Menu** menu, u8* mode)
         return true;
     case 260:
         *menu = &Configure1;
+        *pointer = 0;
         return false;
     case 261:
         return false;
@@ -136,9 +138,9 @@ void menu(u16* prevkeys, u8* mode)
     {
         if (updatemenu)
         {
-            consoleClear();
             swiWaitForVBlank();
-            for (int i = 0; i <= menu->NumEntries; i++)
+            consoleClear();
+            for (int i = 0; i <= menu->NumEntries-1; i++)
             {
                 printf(((pointer == i) ? ">" : " "));
                 if (menu->Toggles) printf((filters[menu->Inputs[i+1]] ? "X" : "O"));
@@ -154,12 +156,12 @@ void menu(u16* prevkeys, u8* mode)
         // todo: find better way to determine what a menu button should do
         if ((keys & KEY_A) && !(*prevkeys & KEY_A))
         {
-            if (menuSelect(menu->Inputs[pointer+1], &menu, mode)) return;
+            if (menuSelect(menu->Inputs[pointer+1], &menu, mode, &pointer)) return;
             updatemenu = true;
         }
         else if ((keys & KEY_B) && !(*prevkeys & KEY_B))
         {
-            if (menuSelect(menu->Inputs[0], &menu, mode)) return;
+            if (menuSelect(menu->Inputs[0], &menu, mode, &pointer)) return;
             updatemenu = true;
         }
         else if ((keys & KEY_UP) && !(*prevkeys & KEY_UP))
@@ -173,7 +175,7 @@ void menu(u16* prevkeys, u8* mode)
         }
         else if ((keys & KEY_DOWN) && !(*prevkeys & KEY_DOWN))
         {
-            if (pointer >= menu->NumEntries) pointer = menu->NumEntries;
+            if (pointer >= menu->NumEntries-1) pointer = menu->NumEntries-1;
             else
             {
                 pointer++;
@@ -243,15 +245,25 @@ bool handleFile(FILE** dat, u16* prevkeys, const u8 mode)
 //=REWINDING==============================================================================
 //========================================================================================
 
+template <bool forward>
 void rewindData(const int iteration)
 {
-    filebuffer = 0;
-    shift = 0;
-    pointer = 2;
-    filebuffer = readData(filebuffer, 4);
-    for (int i = 0; i < iteration; i++)
+    int i;
+    if (!forward)
     {
-        for (int j = 0; j < 192; j++)
+        filebuffer = 0;
+        shift = 0;
+        pointer = 2;
+        filebuffer = readData(filebuffer, 4);
+        i = 0;
+    }
+    else
+    {
+        i = iteration-1;
+    }
+    for (; i < iteration; i++)
+    {
+        for (int y = 0; y < 192; y++)
         {
             while (shift >= 8)
             {
@@ -682,6 +694,7 @@ int main()
     int numpass = 0;
     bool showreference = false;
     bool showrender = false;
+    bool rewind = false;
 
 //========================================================================================
 //=MAIN LOOP==============================================================================
@@ -693,7 +706,31 @@ int main()
 		scanKeys();
         u16 keys = keysHeld();
 
-        while (checkFilters(iteration)) iteration++;
+        bool rewinded = false;
+        while (checkFilters(iteration)) // skip filtered tests.
+        {
+            if (!rewind)
+            {
+            iteration++;
+            rewindData<true>(iteration);
+            }
+            else
+            {
+                rewinded = true;
+                if (iteration > 0)
+                    iteration--;
+                else
+                {
+                    iteration = 0;
+                    rewind = false;
+                }
+            }
+        }
+        rewind = false;
+        if (rewinded)
+        {
+            rewindData<false>(iteration);
+        }
 
         // check if done
         if (iteration >= NumEntries)
@@ -720,7 +757,7 @@ int main()
             {
                 mode = 3; // finished mode
                 iteration--;
-                rewindData(iteration);
+                rewindData<false>(iteration);
             }
         }
 
@@ -799,9 +836,10 @@ int main()
                 iteration--;
                 if (iteration < 0)
                     iteration = 0;
-                rewindData(iteration);
+                rewindData<false>(iteration);
                 showreference = false;
                 showrender = false;
+                rewind = true;
             }
 
             if ((keys & KEY_L && !(prevkeys & KEY_L)))

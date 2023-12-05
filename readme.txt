@@ -6,13 +6,12 @@ Or uh, polyrastertest as I like to call it.
 
 Usage:
 While booting the test rom you can:
-Hold Start to Record New Test Data to the root(probably) of an SD Card.
-Hold Select to enable Manual Mode, where you must Press A to proceed through each test manually.
+Hold Start or Select to access a menu, where you can select filters to disable tests, record new data, or select a "manual" mode for testing.
 If not holding either of those buttons you will proceed through the testing automatically.
 
 In order to load new data into the test you have to replace the data in the /data/ folder and build the test manually.
 Which just means you have to follow these instructions https://github.com/blocksds/sdk/blob/master/readme.rst to set up a blocksds build environment.
-could likely also compile with devkitpro but you'll need to understand how to convert the makefile.
+could likely also compile with devkitpro but you'll need to understand how to convert the makefile. (or dig up the old one from earlier commits).
 If that's not clear enough then uh. idk. This is the first actually independently developed from scratch thing i've put out lol.
 
 
