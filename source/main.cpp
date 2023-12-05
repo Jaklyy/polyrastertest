@@ -100,32 +100,74 @@ bool checkFilters(int iteration)
 //=MENU===================================================================================
 //========================================================================================
 
-bool menuSelect(u16 selection, Menu** menu, u8* mode, u8* pointer)
+bool menuSelect(u16 selection, Menu** menu, u8* mode, u8* pointer, u8* page)
 {
     switch (selection)
     {
-    case 256:
+    case ID_Null:
+        return false;
+    case ID_MainMenu:
         *menu = &MainMenu;
         *pointer = 0;
+        *page = 0;
         return false;
-    case 257:
+    case ID_NormalTest:
         *mode = 0;
         return true;
-    case 258:
+    case ID_ManualTest:
         *mode = 2;
         return true;
-    case 259:
+    case ID_Record:
         *mode = 1;
         return true;
-    case 260:
-        *menu = &Configure1;
+    case ID_Config:
+        *menu = &ConfigFilters;
         *pointer = 0;
+        *page = 0;
         return false;
-    case 261:
+    case ID_NextPage:
+        *pointer = 0;
+        *page += 1;
+        return false;
+    case ID_PrevPage:
+        *pointer = 0;
+        *page -= 1;
         return false;
     default:
         filters[selection] = !filters[selection];
         return false;
+    }
+}
+
+bool checkPagination(Menu* menu, u8 page, int* start, int* end)
+{
+    u16 entries = menu->NumEntries;
+    u8 size;
+    if (page == 0)
+    {
+        *start = 0;
+        size = 23;
+        *end = 0;
+    }
+    else
+    {
+        *start = 22;
+        size = 22;
+        for (int i = 0; i < page-1; i++)
+        {
+            *start += 21;
+        }
+    }
+
+    if (entries <= *start+size)
+    {
+       *end = entries;
+        return 0;
+    }
+    else
+    {
+        *end += *start+22;
+        return 1;
     }
 }
 
@@ -134,18 +176,39 @@ void menu(u16* prevkeys, u8* mode)
     Menu* menu = &MainMenu;
     u8 pointer = 0;
     bool updatemenu = true;
+    u8 page = 0;
+    u16 pageIDs[23];
+    u8 numentries;
     while (1)
     {
         if (updatemenu)
         {
             swiWaitForVBlank();
             consoleClear();
-            for (int i = 0; i <= menu->NumEntries-1; i++)
+            int start, end;
+            bool makenewpage = checkPagination(menu, page, &start, &end);
+            numentries = 0;
+            for (; start < end; start++)
             {
-                printf(((pointer == i) ? ">" : " "));
-                if (menu->Toggles) printf((filters[menu->Inputs[i+1]] ? "X" : "O"));
-                printf(menu->Entries[i]);
+                printf(((pointer == numentries) ? ">" : " "));
+                if (menu->Toggles) printf((filters[menu->Options[start].InputID] ? "X" : "O"));
+                printf(menu->Options[start].Name);
                 printf("\n");
+                pageIDs[numentries++] = menu->Options[start].InputID;
+            }
+            if (page > 0) // prev page
+            {
+                printf(((pointer == numentries) ? "> " : "  "));
+                printf(GeneralInputs[1].Name);
+                printf("\n");
+                pageIDs[numentries++] = GeneralInputs[1].InputID;
+            }
+            if (makenewpage) // next page
+            {
+                printf(((pointer == numentries) ? "> " : "  "));
+                printf(GeneralInputs[0].Name);
+                printf("\n");
+                pageIDs[numentries++] = GeneralInputs[0].InputID;
             }
             updatemenu = false;
         }
@@ -156,17 +219,21 @@ void menu(u16* prevkeys, u8* mode)
         // todo: find better way to determine what a menu button should do
         if ((keys & KEY_A) && !(*prevkeys & KEY_A))
         {
-            if (menuSelect(menu->Inputs[pointer+1], &menu, mode, &pointer)) return;
+            if (menuSelect(pageIDs[pointer], &menu, mode, &pointer, &page)) return;
             updatemenu = true;
         }
         else if ((keys & KEY_B) && !(*prevkeys & KEY_B))
         {
-            if (menuSelect(menu->Inputs[0], &menu, mode, &pointer)) return;
+            if (menuSelect(menu->BackInputID, &menu, mode, &pointer, &page)) return;
             updatemenu = true;
         }
         else if ((keys & KEY_UP) && !(*prevkeys & KEY_UP))
         {
-            if (pointer <= 0) pointer = 0;
+            if (pointer <= 0)
+            {
+                pointer = numentries-1;
+                updatemenu = true;
+            }
             else
             {
                 pointer--;
@@ -175,7 +242,11 @@ void menu(u16* prevkeys, u8* mode)
         }
         else if ((keys & KEY_DOWN) && !(*prevkeys & KEY_DOWN))
         {
-            if (pointer >= menu->NumEntries-1) pointer = menu->NumEntries-1;
+            if (pointer >= numentries-1) 
+            {
+                pointer = 0;
+                updatemenu = true;
+            }
             else
             {
                 pointer++;

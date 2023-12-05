@@ -11,7 +11,7 @@ constexpr char Version[] = "1.0.2-b";
 constexpr u16 DataVersion = 2;
 
 // Poly Attributes
-constexpr u32 ForceZeroDot = (1<<13);
+constexpr u32 ForceZeroDot = (1 << 13);
 constexpr u32 Opaque = (31 << 16);
 constexpr u32 Wireframe = (0 << 16);
 constexpr u32 Trans(u8 Opacity)
@@ -43,7 +43,8 @@ constexpr u16 ColorWrongTex = Blue;
 constexpr u16 ColorVoid = Black;
 
 // Only add to the end to avoid breaking configs (whenever i decide to start saving them)
-enum Tags {
+enum Tags
+{
     Niche = 1,
     UltraNiche,
     FillRules,
@@ -62,7 +63,7 @@ enum Tags {
     Fog,
     Depth,
     Clipping,
-    Cl_TextInterp,
+    Cl_TexInterp,
     Cl_CoordInterp,
     Cl_HorizLine,
     UpperLimits,
@@ -71,8 +72,6 @@ enum Tags {
     Mi_SecVertex,
     Tag_Wireframe,
     Translucency,
-    DSi,
-    ThreeDS, // yes i have to spell out 3 or else the compiler cries about it
     PolyLimit,
     VertexLimit,
 };
@@ -112,29 +111,81 @@ struct ExtTestData
     Polygon Polygons[3];
 };
 
+enum InputIDs
+{
+    ID_Null = 0,
+    ID_MainMenu = 256,
+    ID_NextPage,
+    ID_PrevPage,
+    ID_NormalTest,
+    ID_ManualTest,
+    ID_Record,
+    ID_Config,
+};
+
+struct MenuOptions
+{
+    char Name[31];
+    u16 InputID = ID_Null;
+};
+
+MenuOptions GeneralInputs[] =
+{
+    {"Next Page ==>", ID_NextPage},
+    {"<== Prev Page", ID_PrevPage},
+};
 
 struct Menu
 {
-    u8 NumEntries = 0;
-    char Entries [23][31] = {""};
-    u16 Inputs[24]; // id 0 = b input, higher is each entry. additional values of < 256 are for 
+    u8 NumEntries = 0; //todo: replace with self calculating value
+    u16 BackInputID = ID_Null;
     bool Toggles = false;
-};
-
-Menu Configure1 =
-{
-    .NumEntries = 23, 
-    .Entries = {"-Niche Tests", " *Ultra Niche Tests", "-Fill Rules", " *Normal", " *Swapped", " *Overrides", " *Unusual", " *Line",
-    " *Swapped Vertical Left", " *Trapezoid", " *Edge Marking Fill Quirk", "-Vertical Right Shift", "-Anti-Aliasing", " *Swapped Vertical",
-    "-Edge Marking", "-Wireframe", "-Translucency", "-Clipping", " *Horizontal Lines", "-Upper Limits", " *Scanline Abort", "-Misc",
-    " *Second Vertex Bug"},
-    .Inputs {256, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 26, 27, 18, 21, 22, 23, 24, 25},
-    .Toggles = true
+    MenuOptions Options[];
 };
 
 Menu MainMenu =
 {
     .NumEntries = 4, 
-    .Entries = {"Test", "Manual Test", "Record", "Configure"},
-    .Inputs {261, 257, 258, 259, 260}
+    .Options = {
+    {"Test", ID_NormalTest},
+    {"Manual Test", ID_ManualTest},
+    {"Record New Data", ID_Record},
+    {"Configure", ID_Config},
+    }
+};
+
+Menu ConfigFilters =
+{
+    .NumEntries = 25,
+    .BackInputID = ID_MainMenu,
+    .Toggles = true,
+    .Options = {
+    {"*Niche Tests", Niche},
+    {" -Ultra Niche Tests", UltraNiche},
+    {"*Fill Rules", FillRules},
+    {" -Normal", FR_Normal},
+    {" -Swapped", FR_Swapped},
+    {" -Overrides", FR_Override},
+    {" -Unusual", FR_Unusual},
+    {" -Line", FR_Line},
+    {" -Swapped Vertical Left", FR_SwapVertL},
+    {" -Trapezoid", FR_Trapezoid},
+    {" -Edge Marking Fill Quirk", FR_EdgeMarking},
+    {"*Vertical Right Shift", VertRightShift},
+    {"*Anti-Aliasing", AntiAliasing},
+    {" -Swapped Vertical Bug", AA_SwapVert},
+    {"*Edge Marking", Edgemarking},
+    {"*Wireframe", Tag_Wireframe},
+    {"*Translucency", Translucency},
+    {"*Clipping", Clipping},
+    //{" *Clipping Texture Interp", Cl_TexInterp},
+    //{" *Clipping Coord Interp", Cl_CoordInterp},
+    {" -Clipped Horizontal Lines", Cl_HorizLine},
+    {"*Upper Limits", UpperLimits},
+    {" -Polygon Limit", PolyLimit},
+    {" -Vertex Limit", VertexLimit},
+    {" -Scanline Abort", UL_ScanlineAbort}, 
+    {"*Misc", Misc},
+    {" -Second Vertex Bug", Mi_SecVertex},
+    }
 };
