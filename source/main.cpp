@@ -380,19 +380,46 @@ void drawPoly(const int iteration)
 
         for (u16 poly = 0; poly < ExtendedTests[lookup].NumPolygons; poly++)
         {
+            bool begun = false;
             for (int j = ExtendedTests[lookup].Polygons[poly].Copies; j > 0; j--)
             {
                 glPolyFmt(ExtendedTests[lookup].Polygons[poly].PolyAttr);
                 int verts;
                 if (ExtendedTests[lookup].Polygons[poly].Vertices[3][0] != -512)
                 {
-                    verts = 4;
-                    glBegin(GL_QUAD);
+                    if (ExtendedTests[lookup].Polygons[poly].Strip)
+                    {
+                        if (!begun)
+                        {
+                            glBegin(GL_QUAD_STRIP);
+                            begun = true;
+                            verts = 4;
+                        }
+                        else verts = 2;
+                    }
+                    else
+                    {
+                        verts = 4;
+                        glBegin(GL_QUAD);
+                    }
                 }
                 else
                 {
-                    verts = 3;
-                    glBegin(GL_TRIANGLE);
+                    if (ExtendedTests[lookup].Polygons[poly].Strip)
+                    {
+                        if (!begun)
+                        {
+                            glBegin(GL_TRIANGLE_STRIP);
+                            begun = true;
+                            verts = 3;
+                        }
+                        else verts = 1;
+                    }
+                    else 
+                    {
+                        verts = 3;
+                        glBegin(GL_TRIANGLE);
+                    }
                 }
 
                 for (int i = 0; i < verts; i++)

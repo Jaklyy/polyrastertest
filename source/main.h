@@ -11,6 +11,7 @@ constexpr char Version[] = "1.0.2-b";
 constexpr u16 DataVersion = 2;
 
 // Poly Attributes
+constexpr u32 ForceZeroDot = (1<<13);
 constexpr u32 Opaque = (31 << 16);
 constexpr u32 Wireframe = (0 << 16);
 constexpr u32 Trans(u8 Opacity)
@@ -72,6 +73,8 @@ enum Tags {
     Translucency,
     DSi,
     ThreeDS, // yes i have to spell out 3 or else the compiler cries about it
+    PolyLimit,
+    VertexLimit,
 };
 
 struct TestData
@@ -100,12 +103,13 @@ struct Polygon
     u32 PolyAttr = Opaque | POLY_CULL_NONE;
     u16 VertexColors[4] = {White, White, White, White};
     u16 Copies = 1;
+    bool Strip = false;
 };
 
 struct ExtTestData
 {
     u16 NumPolygons = 1;
-    Polygon Polygons[2];
+    Polygon Polygons[3];
 };
 
 

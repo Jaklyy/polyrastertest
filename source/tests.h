@@ -469,10 +469,30 @@ constexpr TestData Tests[] =
 
 // Category: Upper Limits =====================================
 
-  // Sub Cat: Scanline Rasterization Timings
+  // Sub Cat: Polygon Limit ----------------------------------
+
+    // There can only be 2048 polygons per frame.
+        {.Vertices = {{-64, -64}, {-32, -64}, {-32, -32}, {-64, -32}},
+        .ExtendedTestData = 22,
+        .Tags = {UpperLimits, PolyLimit}},
+    
+  // Sub Cat: Vertex Limit -----------------------------------
+
+    // There can only be 6144 vertices per frame.
+
+    //This should render the polygon due it it barely fitting in the limit thanks to clipping
+        {.Vertices = {{-256}, {-256}, {-256}, {-512}}, // lazy way to not render a polygon cause render order matters
+        .ExtendedTestData = 23,
+        .Tags = {UpperLimits, VertexLimit, Clipping}},
+    // This should not render due to it just barely overflowing the limit
+        {.Vertices = {{-256}, {-256}, {-256}, {-512}}, // lazy way to not render a polygon cause render order matters
+        .ExtendedTestData = 24,
+        .Tags = {UpperLimits, VertexLimit, Clipping}},
+
+  // Sub Cat: Scanline Rasterization Timings -----------------
 
     // It appears that you can only render so much in one scanline before the rasterizer gives up on it.
-    // Good luck passing these, basically requires susing out rasterization timings.
+    // Good luck passing these, basically requires sussing out rasterization timings.
 
     // Look at this
         {.Vertices = {{-256, -256}, {-256, 256}, {256, 256}, {256, -256}},
@@ -559,19 +579,19 @@ constexpr ExtTestData ExtendedTests[] =
             .VertexColors{Red, Red, Red}},
             {.Vertices = {{34, -34, -32}, {34, 34, -32}, {-34, 34, -32}, {-34, -34, -32}},
             .VertexColors{Blue, Blue, Blue, Blue}}}},
-    //ext 2
+    // ext 2
         {.NumPolygons = 2,
         .Polygons = {{.Vertices = {{-1, -32, -16}, {-1, 32, -16}, {32, 32, -16}, {32, -32, -16}},
             .VertexColors{Red, Red, Red, Red}},
             {.Vertices = {{34, -34, -32}, {34, 34, -32}, {-34, 34, -32}, {-34, -34, -32}},
             .VertexColors{Blue, Blue, Blue, Blue}}}},
-    //ext 3
+    // ext 3
         {.NumPolygons = 2,
         .Polygons = {{.Vertices = {{32, 0}, {-32, 0}, {32, -32}, {-512}},
             .VertexColors{Red, Red, Red}},
             {.Vertices = {{34, -34, -32}, {34, 34, -32}, {-34, 34, -32}, {-34, -34, -32}},
             .VertexColors{Blue, Blue, Blue, Blue}}}},
-    //ext 4
+    // ext 4
         {.NumPolygons = 2,
         .Polygons = {{.Vertices = {{-32, 32, -16}, {-32, -1, -16}, {32, -1, -16}, {32, 32, -16}},
             .VertexColors{Red, Red, Red, Red}},
@@ -583,98 +603,124 @@ constexpr ExtTestData ExtendedTests[] =
             .VertexColors{Red, Red, Red}},
             {.Vertices = {{34, -34, -32}, {34, 34, -32}, {-34, 34, -32}, {-34, -34, -32}},
             .VertexColors{Blue, Blue, Blue, Blue}}}},
-    //ext 6
+    // ext 6
         {.NumPolygons = 2,
         .Polygons = {{.Vertices = {{-32, 32, -16}, {-32, -1, -16}, {32, -1, -16}, {32, 32, -16}},
             .VertexColors{Red, Red, Red, Red}},
             {.Vertices = {{34, -34, -32}, {34, 34, -32}, {-34, 34, -32}, {-34, -34, -32}},
             .VertexColors{Blue, Blue, Blue, Blue}}}},
-    //ext 7
+    // ext 7
         {.NumPolygons = 2,
         .Polygons = {{.Vertices = {{-32, 32, -16}, {-32, 2, -16}, {32, 0, -16}, {32, 32, -16}},
             .VertexColors{Red, Red, Red, Red}},
             {.Vertices = {{34, -34, -32}, {34, 34, -32}, {-34, 34, -32}, {-34, -34, -32}},
             .VertexColors{Blue, Blue, Blue, Blue}}}},
-    //ext 8
+    // ext 8
         {.NumPolygons = 2,
         .Polygons = {{.Vertices = {{-32, -1, -16}, {-32, 1, -16}, {32, -1, -16}, {-512}},
             .VertexColors{Red, Red, Red}},
             {.Vertices = {{34, -34, -32}, {34, 34, -32}, {-34, 34, -32}, {-34, -34, -32}},
             .VertexColors{Blue, Blue, Blue, Blue}}}},
-    //ext 9
+    // ext 9
         {.NumPolygons = 2,
         .Polygons = {{.Vertices = {{-32, 0, -16}, {-32, -2, -16}, {32, 0, -16}, {-512}},
             .VertexColors{Red, Red, Red}},
             {.Vertices = {{34, -34, -32}, {34, 34, -32}, {-34, 34, -32}, {-34, -34, -32}},
             .VertexColors{Blue, Blue, Blue, Blue}}}},
-    //ext 10
+    // ext 10
         {.NumPolygons = 2,
         .Polygons = {{.Vertices = {{-1, -32, -16}, {-1, 32, -16}, {32, 32, -16}, {32, -32, -16}},
             .VertexColors{Red, Red, Red, Red}},
             {.Vertices = {{34, -34, -32}, {34, 34, -32}, {-34, 34, -32}, {-34, -34, -32}},
             .VertexColors{Blue, Blue, Blue, Blue}}}},
-    //ext 11
+    // ext 11
         {.NumPolygons = 2,
         .Polygons = {{.Vertices = {{2, -32, -16}, {0, 32, -16}, {32, 32, -16}, {32, -32, -16}},
             .VertexColors{Red, Red, Red, Red}},
             {.Vertices = {{34, -34, -32}, {34, 34, -32}, {-34, 34, -32}, {-34, -34, -32}},
             .VertexColors{Blue, Blue, Blue, Blue}}}},
-    //ext 12
+    // ext 12
         {.NumPolygons = 2,
         .Polygons = {{.Vertices = {{-1, -32, -16}, {-1, 32, -16}, {1, 32, -16}, {-512}},
             .VertexColors{Red, Red, Red}},
             {.Vertices = {{34, -34, -32}, {34, 34, -32}, {-34, 34, -32}, {-34, -34, -32}},
             .VertexColors{Blue, Blue, Blue, Blue}}}},
-    //ext 13
+    // ext 13
         {.NumPolygons = 2,
         .Polygons = {{.Vertices = {{2, -32, -16}, {0, 32, -16}, {2, 32, -16}, {-512}},
             .VertexColors{Red, Red, Red}},
             {.Vertices = {{34, -34, -32}, {34, 34, -32}, {-34, 34, -32}, {-34, -34, -32}},
             .VertexColors{Blue, Blue, Blue, Blue}}}},
-    //ext 14
+    // ext 14
         {.NumPolygons = 2,
         .Polygons = {{.Vertices = {{-32, 0, -8}, {32, 0, -8}, {32, 32, -8}, {-32, 32, -8}},
             .VertexColors{Red, Red, Red, Red}},
             {.Vertices = {{-32, -1, -16}, {32, -1, -16}, {32, 32, -16}, {-32, 32, -16}},
             .PolyAttr = Opaque | POLY_CULL_NONE | PolyID(1),
             .VertexColors{Blue, Blue, Blue, Blue}}}},
-    //ext 15
+    // ext 15
         {.NumPolygons = 2,
         .Polygons = {{.Vertices = {{-32, -1, -16}, {32, -1, -16}, {32, -1, -16}, {-32, -1, -16}},
             .VertexColors{Red, Red, Red, Red}},
             {.Vertices = {{34, -34, -32}, {34, 34, -32}, {-34, 34, -32}, {-34, -34, -32}},
             .VertexColors{Blue, Blue, Blue, Blue}}}},
-    //ext 16
+    // ext 16
         {.NumPolygons = 2,
         .Polygons = {{.Vertices = {{-1, -32, -16}, {-1, -32, -16}, {-1, 32, -16}, {-1, 32, -16}},
             .VertexColors{Red, Red, Red, Red}},
             {.Vertices = {{34, -34, -32}, {34, 34, -32}, {-34, 34, -32}, {-34, -34, -32}},
             .VertexColors{Blue, Blue, Blue, Blue}}}},
-    //ext 17
+    // ext 17
         {.NumPolygons = 1,
         .Polygons = {{.Vertices = {{-80, -5}, {-80, 5}, {80, 5}, {80, -5}},
             .VertexColors{Yellow, Yellow, Yellow, Yellow},
             .Copies = 94}}},
-    //ext 18
+    // ext 18
         {.NumPolygons = 1,
         .Polygons = {{.Vertices = {{-80, -5}, {-80, 5}, {0, 5}, {0, -5}},
             .VertexColors{Yellow, Yellow, Yellow, Yellow},
             .Copies = 501}}},
-    //ext 19
+    // ext 19
         {.NumPolygons = 1,
         .Polygons = {{.Vertices = {{-124, -5}, {-124, 5}, {-100, 5}, {-100, -5}},
             .VertexColors{Yellow, Yellow, Yellow, Yellow},
             .Copies = 448}}},
-    //ext 20
+    // ext 20
         {.NumPolygons = 1,
         .Polygons = {{.Vertices = {{-124, -5}, {-124, 5}, {-100, 5}, {-100, -5}},
             .VertexColors{Yellow, Yellow, Yellow, Yellow},
             .Copies = 2048}}},
-    //ext 21
+    // ext 21
         {.NumPolygons = 1,
         .Polygons = {{.Vertices = {{-80, -90}, {-80, -80}, {80, -80}, {80, -90}},
             .VertexColors{Yellow, Yellow, Yellow, Yellow},
             .Copies = 94}}},
+    // ext 22
+        {.NumPolygons = 3,
+        .Polygons = {{.Vertices = {{0, 0}, {0, 0}, {0, 0}, {-512}},
+        .PolyAttr = Opaque | POLY_CULL_NONE | ForceZeroDot,
+        .Copies = 2046,
+        .Strip = true},
+            {.Vertices = {{64, -64}, {32, -64}, {32, -32}, {64, -32}}},
+            {.Vertices = {{-32, 64}, {32, 64}, {32, 32}, {-32, 32}}}}},
+    // ext 23
+        {.NumPolygons = 3,
+        .Polygons = {{.Vertices = {{0, 0}, {0, 0}, {0, 0}, {0, 0}},
+        .PolyAttr = Opaque | POLY_CULL_NONE | ForceZeroDot,
+        .Copies = 1533},
+            {.Vertices = {{0, 0}, {0, 0}, {0, 0}, {-512}},
+            .PolyAttr = Opaque | POLY_CULL_NONE | ForceZeroDot,
+            .Copies = 3},
+            {.Vertices = {{108, 0}, {140, -32}, {172, 0}, {140, 32}}}}},
+    // ext 24
+        {.NumPolygons = 3,
+        .Polygons = {{.Vertices = {{0, 0}, {0, 0}, {0, 0}, {0, 0}},
+        .PolyAttr = Opaque | POLY_CULL_NONE | ForceZeroDot,
+        .Copies = 1533},
+            {.Vertices = {{0, 0}, {0, 0}, {0, 0}, {-512}},
+            .PolyAttr = Opaque | POLY_CULL_NONE | ForceZeroDot,
+            .Copies = 3},
+            {.Vertices = {{-32, 0}, {0, -32}, {32, 0}, {0, 32}}}}},
 };
 
 constexpr int NumEntries = sizeof(Tests) / sizeof(Tests[0]);
