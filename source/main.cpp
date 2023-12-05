@@ -20,6 +20,7 @@
 u32 filebuffer = 0; // life would be so much easier if this were 64 bit but i cba to figure out why changing that keeps breaking
 u32 pointer = 0;
 u8 shift = 0;
+bool filters[256];
 
 //========================================================================================
 //=MISC===================================================================================
@@ -79,6 +80,106 @@ u16 waitForInput(u16* prevkeys)
         u16 keys = keysHeld();
         if ((keys & KEY_START && !(*prevkeys & KEY_START)) || (keys & KEY_A && !(*prevkeys & KEY_A)))
             return keys;
+        *prevkeys = keys;
+        swiWaitForVBlank();
+    }
+}
+
+bool checkFilters(int iteration)
+{
+    for (int i = 0; i < 8; i++)
+    {
+        u8 tag = Tests[iteration].Tags[i];
+        if (filters[tag])
+            return true;
+    }
+    return false;
+}
+
+//========================================================================================
+//=MENU===================================================================================
+//========================================================================================
+
+bool menuSelect(u16 selection, Menu** menu, u8* mode)
+{
+    switch (selection)
+    {
+    case 256:
+        *menu = &MainMenu;
+        return false;
+    case 257:
+        *mode = 0;
+        return true;
+    case 258:
+        *mode = 2;
+        return true;
+    case 259:
+        *mode = 1;
+        return true;
+    case 260:
+        *menu = &Configure1;
+        return false;
+    case 261:
+        return false;
+    default:
+        filters[selection] = !filters[selection];
+        return false;
+    }
+}
+
+void menu(u16* prevkeys, u8* mode)
+{
+    Menu* menu = &MainMenu;
+    u8 pointer = 0;
+    bool updatemenu = true;
+    while (1)
+    {
+        if (updatemenu)
+        {
+            consoleClear();
+            swiWaitForVBlank();
+            for (int i = 0; i <= menu->NumEntries; i++)
+            {
+                printf(((pointer == i) ? ">" : " "));
+                if (menu->Toggles) printf((filters[menu->Inputs[i+1]] ? "X" : "O"));
+                printf(menu->Entries[i]);
+                printf("\n");
+            }
+            updatemenu = false;
+        }
+
+        scanKeys();
+        u16 keys = keysHeld();
+
+        // todo: find better way to determine what a menu button should do
+        if ((keys & KEY_A) && !(*prevkeys & KEY_A))
+        {
+            if (menuSelect(menu->Inputs[pointer+1], &menu, mode)) return;
+            updatemenu = true;
+        }
+        else if ((keys & KEY_B) && !(*prevkeys & KEY_B))
+        {
+            if (menuSelect(menu->Inputs[0], &menu, mode)) return;
+            updatemenu = true;
+        }
+        else if ((keys & KEY_UP) && !(*prevkeys & KEY_UP))
+        {
+            if (pointer <= 0) pointer = 0;
+            else
+            {
+                pointer--;
+                updatemenu = true;
+            }
+        }
+        else if ((keys & KEY_DOWN) && !(*prevkeys & KEY_DOWN))
+        {
+            if (pointer >= menu->NumEntries) pointer = menu->NumEntries;
+            else
+            {
+                pointer++;
+                updatemenu = true;
+            }
+        }
         *prevkeys = keys;
         swiWaitForVBlank();
     }
@@ -552,20 +653,16 @@ int main()
     {
         u16 keys = keysHeld();
 
-        if (keys & KEY_START)
-            mode = 1; // generate data file
-        else if (keys & KEY_SELECT)
-            mode = 2; // test one-by-one
-        else
-            mode = 0; // default test mode
-        prevkeys = keys;
+        if (keys & KEY_START || keys & KEY_SELECT)
+        {
+            prevkeys = keys;
+            menu(&prevkeys, &mode);
+        }
+        else mode = 0; // default test mode
     }
 
     FILE* dat;
-    if (!handleFile(&dat, &prevkeys, mode))
-    {
-        return 0;
-    }
+    if (!handleFile(&dat, &prevkeys, mode)) return 0;
 
     vramSetBankA(VRAM_A_LCD);
     vramSetBankB(VRAM_B_LCD);
@@ -595,6 +692,8 @@ int main()
         // poll input
 		scanKeys();
         u16 keys = keysHeld();
+
+        while (checkFilters(iteration)) iteration++;
 
         // check if done
         if (iteration >= NumEntries)
